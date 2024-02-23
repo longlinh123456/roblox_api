@@ -5,7 +5,6 @@ use crate::{AuthenticatedClient, BaseClient, Empty, Id, RequestResult};
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
-use reqwest::Url;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug)]

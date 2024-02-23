@@ -78,7 +78,7 @@ impl BaseClient for Client {
         &self,
         method: Method,
         url: impl IntoUrl + Send,
-        query: impl Into<Option<&'a [(&'a str, &'a str)]>> + Send,
+        query: Option<&'a [(&'a str, &'a str)]>,
         payload: impl Into<Option<U>> + Send,
     ) -> RequestResult<T> {
         self.inner.request(method, url, query, payload).await
@@ -95,12 +95,12 @@ impl InnerClient {
         &self,
         method: Method,
         url: impl IntoUrl + Send,
-        query: impl Into<Option<&'a [(&'a str, &'a str)]>> + Send,
+        query: Option<&'a [(&'a str, &'a str)]>,
         payload: impl Into<Option<U>> + Send,
     ) -> RequestBuilder {
         let is_get = matches!(&method, &Method::GET);
         let mut builder = self.client.request(method, url);
-        if let Some(query) = query.into() {
+        if let Some(query) = query {
             builder = builder.query(query);
         };
         builder = match payload.into() {
@@ -118,7 +118,7 @@ impl InnerClient {
         &self,
         method: Method,
         url: impl IntoUrl + Send,
-        query: impl Into<Option<&'a [(&'a str, &'a str)]>> + Send,
+        query: Option<&'a [(&'a str, &'a str)]>,
         payload: impl Into<Option<U>> + Send,
     ) -> RequestResult<T> {
         let builder = self.build_request(method, url, query, payload);
@@ -172,7 +172,7 @@ impl AuthenticatedClient for CookieClient {
         &self,
         method: Method,
         url: impl IntoUrl + Send,
-        query: impl Into<Option<&'a [(&'a str, &'a str)]>> + Send,
+        query: Option<&'a [(&'a str, &'a str)]>,
         payload: impl Into<Option<U>> + Send,
     ) -> RequestResult<T> {
         self.inner.request(method, url, query, payload).await
@@ -190,12 +190,12 @@ impl InnerCookieClient {
         &self,
         method: Method,
         url: impl IntoUrl + Send,
-        query: impl Into<Option<&'a [(&'a str, &'a str)]>> + Send,
+        query: Option<&'a [(&'a str, &'a str)]>,
         payload: impl Into<Option<U>> + Send,
     ) -> RequestBuilder {
         let is_get = matches!(&method, &Method::GET);
         let mut builder = self.client.request(method, url);
-        if let Some(query) = query.into() {
+        if let Some(query) = query {
             builder = builder.query(query);
         };
         builder = match payload.into() {
@@ -216,7 +216,7 @@ impl InnerCookieClient {
         &self,
         method: Method,
         url: impl IntoUrl + Send,
-        query: impl Into<Option<&'a [(&'a str, &'a str)]>> + Send,
+        query: Option<&'a [(&'a str, &'a str)]>,
         payload: impl Into<Option<U>> + Send,
     ) -> RequestResult<T> {
         let builder = self.build_request(method, url, query, payload);

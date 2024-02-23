@@ -104,13 +104,13 @@ pub trait BaseClient: Sync {
         &self,
         method: Method,
         url: impl IntoUrl + Send,
-        query: impl Into<Option<&'a [(&'a str, &'a str)]>> + Send,
+        query: Option<&'a [(&'a str, &'a str)]>,
         payload: impl Into<Option<U>> + Send,
     ) -> RequestResult<T>;
     async fn get<'a, T: DeserializeOwned>(
         &self,
         url: impl IntoUrl + Send,
-        query: impl Into<Option<&'a [(&'a str, &'a str)]>> + Send,
+        query: Option<&'a [(&'a str, &'a str)]>,
     ) -> RequestResult<T> {
         self.request::<T, ()>(Method::GET, url, query, None).await
     }
@@ -151,7 +151,7 @@ impl<C: AuthenticatedClient> BaseClient for C {
         &self,
         method: Method,
         url: impl IntoUrl + Send,
-        query: impl Into<Option<&'a [(&'a str, &'a str)]>> + Send,
+        query: Option<&'a [(&'a str, &'a str)]>,
         payload: impl Into<Option<U>> + Send,
     ) -> RequestResult<T> {
         self.authenticated_request(method, url, query, payload)
@@ -165,13 +165,13 @@ pub trait AuthenticatedClient: Sync {
         &self,
         method: Method,
         url: impl IntoUrl + Send,
-        query: impl Into<Option<&'a [(&'a str, &'a str)]>> + Send,
+        query: Option<&'a [(&'a str, &'a str)]>,
         payload: impl Into<Option<U>> + Send,
     ) -> RequestResult<T>;
     async fn authenticated_get<'a, T: DeserializeOwned>(
         &self,
         url: impl IntoUrl + Send,
-        query: impl Into<Option<&'a [(&'a str, &'a str)]>> + Send,
+        query: Option<&'a [(&'a str, &'a str)]>,
     ) -> RequestResult<T> {
         self.authenticated_request::<T, ()>(Method::GET, url, query, None)
             .await

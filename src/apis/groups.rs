@@ -114,9 +114,12 @@ pub trait GroupsApi: BaseClient {
         &self,
         mut group_ids: impl Iterator<Item = impl Borrow<Id> + Display> + Send,
     ) -> RequestResult<Vec<BatchInfo>> {
-        let mut api_url = Url::parse(add_base_url!("v2/groups")).unwrap();
-        api_url.set_query(Some(&format!("groupIds={}", group_ids.join(","))));
-        let response = self.get::<BatchResponse>(api_url, None).await?;
+        let response = self
+            .get::<BatchResponse>(
+                add_base_url!("v2/groups"),
+                Some(&[("groupIds", group_ids.join(",").as_str())]),
+            )
+            .await?;
         Ok(response.data)
     }
     async fn get_detailed_info(&self, group: Id) -> RequestResult<DetailedInfo> {

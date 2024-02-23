@@ -105,7 +105,10 @@ impl InnerClient {
         };
         builder = match payload.into() {
             Some(payload) => builder.json(&payload),
-            None => builder.body(""),
+            None => builder
+                .body("")
+                .header("Content-Length", 0)
+                .header("Content-Type", "application/json"),
         };
         if !is_get {
             if let Some(csrf_token) = &*self.csrf_token.read() {

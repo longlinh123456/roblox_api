@@ -98,7 +98,7 @@ impl InnerClient {
         query: Option<&'a [(&'a str, &'a str)]>,
         payload: impl Into<Option<U>> + Send,
     ) -> RequestBuilder {
-        let is_get = matches!(&method, &Method::GET);
+        let is_get = matches!(method, Method::GET);
         let mut builder = self.client.request(method, url);
         if let Some(query) = query {
             builder = builder.query(query);
@@ -196,7 +196,7 @@ impl InnerCookieClient {
         query: Option<&'a [(&'a str, &'a str)]>,
         payload: impl Into<Option<U>> + Send,
     ) -> RequestBuilder {
-        let is_get = matches!(&method, &Method::GET);
+        let is_get = matches!(method, Method::GET);
         let mut builder = self.client.request(method, url);
         if let Some(query) = query {
             builder = builder.query(query);

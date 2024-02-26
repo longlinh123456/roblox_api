@@ -61,8 +61,6 @@ pub struct DetailedInfo {
     pub is_builders_club_only: bool,
     pub public_entry_allowed: bool,
     pub has_verified_badge: bool,
-    #[serde(default)]
-    pub is_locked: bool,
 }
 
 #[derive(Serialize, Debug)]

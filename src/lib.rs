@@ -72,6 +72,7 @@ struct InnerApiError {
     pub code: i8,
     pub message: String,
     pub user_facing_message: Option<String>,
+    pub field: Option<String>,
 }
 
 #[derive(Debug, Deserialize, Error, Clone, Default)]
@@ -81,6 +82,7 @@ pub struct ApiError {
     pub code: i8,
     pub message: String,
     pub user_facing_message: Option<String>,
+    pub field: Option<String>,
 }
 impl ApiError {
     #[must_use]
@@ -94,6 +96,7 @@ impl From<ApiErrors> for ApiError {
             code: value.errors[0].code,
             message: mem::take(&mut value.errors[0].message),
             user_facing_message: mem::take(&mut value.errors[0].user_facing_message),
+            field: mem::take(&mut value.errors[0].field),
         }
     }
 }

@@ -120,16 +120,12 @@ pub trait GroupsApi: BaseClient {
         Ok(response.data)
     }
     async fn get_detailed_info(&self, group: Id) -> RequestResult<DetailedInfo> {
-        let response = self
-            .get::<DetailedInfo>(add_base_url!("v1/groups/{}", group), None)
-            .await?;
-        Ok(response)
+        self.get::<DetailedInfo>(add_base_url!("v1/groups/{}", group), None)
+            .await
     }
     async fn get_metadata(&self) -> RequestResult<Metadata> {
-        let response = self
-            .get::<Metadata>(add_base_url!("v1/groups/metadata"), None)
-            .await?;
-        Ok(response)
+        self.get::<Metadata>(add_base_url!("v1/groups/metadata"), None)
+            .await
     }
 }
 impl<T: BaseClient> GroupsApi for T {}
@@ -141,31 +137,25 @@ pub trait GroupsAuthenticatedApi: AuthenticatedClient {
         group: Id,
         solved_captcha: impl Into<Option<SolvedCaptcha<'a>>> + Send,
     ) -> RequestResult<Empty> {
-        let response = self
-            .authenticated_post::<Empty, SolvedCaptcha<'a>>(
-                add_base_url!("v1/groups/{}/users", group),
-                solved_captcha,
-            )
-            .await?;
-        Ok(response)
+        self.authenticated_post::<Empty, SolvedCaptcha<'a>>(
+            add_base_url!("v1/groups/{}/users", group),
+            solved_captcha,
+        )
+        .await
     }
     async fn claim_group(&self, group: Id) -> RequestResult<Empty> {
-        let response = self
-            .authenticated_post::<Empty, ()>(
-                add_base_url!("v1/groups/{}/claim-ownership", group),
-                None,
-            )
-            .await?;
-        Ok(response)
+        self.authenticated_post::<Empty, ()>(
+            add_base_url!("v1/groups/{}/claim-ownership", group),
+            None,
+        )
+        .await
     }
     async fn remove_user_from_group(&self, group: Id, target: Id) -> RequestResult<Empty> {
-        let response = self
-            .authenticated_delete::<Empty, ()>(
-                add_base_url!("v1/groups/{}/users/{}", group, target),
-                None,
-            )
-            .await?;
-        Ok(response)
+        self.authenticated_delete::<Empty, ()>(
+            add_base_url!("v1/groups/{}/users/{}", group, target),
+            None,
+        )
+        .await
     }
 }
 impl<T: AuthenticatedClient> GroupsAuthenticatedApi for T {}

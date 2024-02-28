@@ -74,12 +74,12 @@ impl Client {
 
 #[async_trait]
 impl BaseClient for Client {
-    async fn request<'a, T: DeserializeOwned, U: Serialize>(
+    async fn request<'a, T: DeserializeOwned, U: Serialize, V: Serialize>(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
-        query: Option<&'a [(&'a str, &'a str)]>,
-        payload: impl Into<Option<U>> + Send,
+        query: impl Into<Option<U>> + Send,
+        payload: impl Into<Option<V>> + Send,
     ) -> RequestResult<T> {
         self.inner.request(method, url, query, payload).await
     }
@@ -91,17 +91,17 @@ struct InnerClient {
     csrf_token: RwLock<Option<String>>,
 }
 impl InnerClient {
-    fn build_request<'a, U: Serialize>(
+    fn build_request<'a, U: Serialize, V: Serialize>(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
-        query: Option<&'a [(&'a str, &'a str)]>,
-        payload: impl Into<Option<U>> + Send,
+        query: impl Into<Option<U>> + Send,
+        payload: impl Into<Option<V>> + Send,
     ) -> RequestBuilder {
         let is_get = matches!(method, Method::GET);
         let mut builder = self.client.request(method, url);
-        if let Some(query) = query {
-            builder = builder.query(query);
+        if let Some(query) = query.into() {
+            builder = builder.query(&query);
         };
         builder = match payload.into() {
             Some(payload) => builder.json(&payload),
@@ -117,12 +117,12 @@ impl InnerClient {
         }
         builder
     }
-    pub async fn request<'a, T: DeserializeOwned, U: Serialize>(
+    pub async fn request<'a, T: DeserializeOwned, U: Serialize, V: Serialize>(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
-        query: Option<&'a [(&'a str, &'a str)]>,
-        payload: impl Into<Option<U>> + Send,
+        query: impl Into<Option<U>> + Send,
+        payload: impl Into<Option<V>> + Send,
     ) -> RequestResult<T> {
         let builder = self.build_request(method, url, query, payload);
         let mut response = builder.try_clone().unwrap().send().await?;
@@ -171,12 +171,12 @@ impl CookieClient {
 
 #[async_trait]
 impl AuthenticatedClient for CookieClient {
-    async fn authenticated_request<'a, T: DeserializeOwned, U: Serialize>(
+    async fn authenticated_request<'a, T: DeserializeOwned, U: Serialize, V: Serialize>(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
-        query: Option<&'a [(&'a str, &'a str)]>,
-        payload: impl Into<Option<U>> + Send,
+        query: impl Into<Option<U>> + Send,
+        payload: impl Into<Option<V>> + Send,
     ) -> RequestResult<T> {
         self.inner.request(method, url, query, payload).await
     }
@@ -189,17 +189,17 @@ struct InnerCookieClient {
     jar: Arc<StaticSharedJar>,
 }
 impl InnerCookieClient {
-    fn build_request<'a, U: Serialize>(
+    fn build_request<'a, U: Serialize, V: Serialize>(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
-        query: Option<&'a [(&'a str, &'a str)]>,
-        payload: impl Into<Option<U>> + Send,
+        query: impl Into<Option<U>> + Send,
+        payload: impl Into<Option<V>> + Send,
     ) -> RequestBuilder {
         let is_get = matches!(method, Method::GET);
         let mut builder = self.client.request(method, url);
-        if let Some(query) = query {
-            builder = builder.query(query);
+        if let Some(query) = query.into() {
+            builder = builder.query(&query);
         };
         builder = match payload.into() {
             Some(payload) => builder.json(&payload),
@@ -215,12 +215,12 @@ impl InnerCookieClient {
         }
         builder
     }
-    pub async fn request<'a, T: DeserializeOwned, U: Serialize>(
+    pub async fn request<'a, T: DeserializeOwned, U: Serialize, V: Serialize>(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
-        query: Option<&'a [(&'a str, &'a str)]>,
-        payload: impl Into<Option<U>> + Send,
+        query: impl Into<Option<U>> + Send,
+        payload: impl Into<Option<V>> + Send,
     ) -> RequestResult<T> {
         let builder = self.build_request(method, url, query, payload);
         let mut response = builder.try_clone().unwrap().send().await?;

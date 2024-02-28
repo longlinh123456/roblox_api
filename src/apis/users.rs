@@ -22,8 +22,11 @@ macro_rules! add_base_url {
 #[async_trait]
 pub trait UsersAuthenticatedApi: AuthenticatedClient {
     async fn get_authenticated_user(&self) -> RequestResult<AuthenticatedUser> {
-        self.authenticated_get::<AuthenticatedUser>(add_base_url!("v1/users/authenticated"), None)
-            .await
+        self.authenticated_get::<AuthenticatedUser, ()>(
+            add_base_url!("v1/users/authenticated"),
+            None,
+        )
+        .await
     }
 }
 impl<T: AuthenticatedClient> UsersAuthenticatedApi for T {}

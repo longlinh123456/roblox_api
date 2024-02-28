@@ -22,7 +22,7 @@ macro_rules! add_base_url {
 pub trait EconomyAuthenticatedApi: AuthenticatedClient {
     async fn get_group_funds(&self, group: Id) -> RequestResult<u64> {
         let response = self
-            .authenticated_get::<Robux>(add_base_url!("v1/groups/{}/currency", group), None)
+            .authenticated_get::<Robux, ()>(add_base_url!("v1/groups/{}/currency", group), None)
             .await?;
         Ok(response.robux)
     }

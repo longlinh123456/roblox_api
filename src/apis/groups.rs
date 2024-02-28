@@ -7,6 +7,8 @@ use chrono::{DateTime, Utc};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
+use super::StrPairArray;
+
 #[derive(Deserialize, Debug)]
 pub struct Shout {
     pub body: String,
@@ -112,19 +114,19 @@ pub trait GroupsApi: BaseClient {
         mut group_ids: impl Iterator<Item = impl Borrow<Id> + Display> + Send,
     ) -> RequestResult<Vec<BatchInfo>> {
         let response = self
-            .get::<BatchResponse>(
+            .get::<BatchResponse, StrPairArray<1>>(
                 add_base_url!("v2/groups"),
-                Some(&[("groupIds", group_ids.join(",").as_str())]),
+                [("groupIds", group_ids.join(",").as_str())],
             )
             .await?;
         Ok(response.data)
     }
     async fn get_detailed_info(&self, group: Id) -> RequestResult<DetailedInfo> {
-        self.get::<DetailedInfo>(add_base_url!("v1/groups/{}", group), None)
+        self.get::<DetailedInfo, ()>(add_base_url!("v1/groups/{}", group), None)
             .await
     }
     async fn get_metadata(&self) -> RequestResult<Metadata> {
-        self.get::<Metadata>(add_base_url!("v1/groups/metadata"), None)
+        self.get::<Metadata, ()>(add_base_url!("v1/groups/metadata"), None)
             .await
     }
 }

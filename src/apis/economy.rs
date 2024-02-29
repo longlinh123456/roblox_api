@@ -1,7 +1,9 @@
 use async_trait::async_trait;
 use serde::Deserialize;
 
-use crate::{AuthenticatedClient, Id, RequestResult};
+use crate::{AuthenticatedClient, RequestResult};
+
+use super::Id;
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]

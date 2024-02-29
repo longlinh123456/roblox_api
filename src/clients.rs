@@ -10,7 +10,8 @@ use reqwest::{
 use serde::{de::DeserializeOwned, Serialize};
 use std::{collections::HashMap, sync::Arc};
 
-use crate::{ApiResponse, AuthenticatedClient, BaseClient, RequestResult};
+use crate::apis::ApiResponse;
+use crate::{AuthenticatedClient, BaseClient, RequestResult};
 
 pub use reqwest::ClientBuilder;
 pub use reqwest::Proxy;

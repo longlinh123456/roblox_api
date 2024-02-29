@@ -1,13 +1,13 @@
 use std::{borrow::Borrow, fmt::Display};
 
-use crate::{AuthenticatedClient, BaseClient, Empty, Id, RequestResult};
+use crate::{AuthenticatedClient, BaseClient, RequestResult};
 
 use async_trait::async_trait;
 use chrono::{DateTime, Utc};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use super::StrPairArray;
+use super::{Empty, Id, StrPairArray};
 
 #[derive(Deserialize, Debug)]
 pub struct Shout {

@@ -91,7 +91,7 @@ struct InnerClient {
     csrf_token: RwLock<Option<String>>,
 }
 impl InnerClient {
-    fn build_request<'a, U: Serialize, V: Serialize>(
+    fn build_request<U: Serialize, V: Serialize>(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
@@ -189,7 +189,7 @@ struct InnerCookieClient {
     jar: Arc<StaticSharedJar>,
 }
 impl InnerCookieClient {
-    fn build_request<'a, U: Serialize, V: Serialize>(
+    fn build_request<U: Serialize, V: Serialize>(
         &self,
         method: Method,
         url: impl IntoUrl + Send,

@@ -16,7 +16,7 @@ macro_rules! add_base_url {
         concat!("https://economy.roblox.com/", $api_route)
     };
     ($api_format_string: literal, $($args:expr),+) => {
-        &format!(concat!("https://economy.roblox.com/", $api_format_string), $($args),+)
+        format!(concat!("https://economy.roblox.com/", $api_format_string), $($args),+)
     };
 }
 

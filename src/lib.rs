@@ -20,6 +20,7 @@ use serde::{de::DeserializeOwned, Serialize};
 
 pub mod apis;
 pub mod clients;
+pub(crate) mod utils;
 
 #[async_trait]
 pub trait BaseClient: Sync {

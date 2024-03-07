@@ -16,8 +16,8 @@ use crate::{AuthenticatedClient, BaseClient, RequestResult};
 pub use reqwest::ClientBuilder;
 pub use reqwest::Proxy;
 
-const CSRF_TOKEN_HEADER: &str = "X-CSRF-TOKEN";
-const AUTHENTICATION_COOKIE_NAME: &str = ".ROBLOSECURITY";
+const CSRF_TOKEN_HEADER: &str = "x-csrf-token";
+const AUTHENTICATION_COOKIE_NAME: &str = ".roblosecurity";
 
 #[derive(Default, Debug)]
 struct StaticSharedJar(RwLock<HashMap<String, String, FxBuildHasher>>);

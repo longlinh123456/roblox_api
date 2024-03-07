@@ -1,4 +1,4 @@
-use std::{borrow::Borrow, fmt::Display};
+use std::fmt::Display;
 
 use crate::{AuthenticatedClient, BaseClient, RequestResult};
 
@@ -104,19 +104,20 @@ macro_rules! add_base_url {
         concat!("https://groups.roblox.com/", $api_route)
     };
     ($api_format_string: literal, $($args:expr),+) => {
-        &format!(concat!("https://groups.roblox.com/", $api_format_string), $($args),+)
+        format!(concat!("https://groups.roblox.com/", $api_format_string), $($args),+)
     };
 }
 #[async_trait]
 pub trait GroupsApi: BaseClient {
     async fn get_batch_info(
         &self,
-        mut group_ids: impl Iterator<Item = impl Borrow<Id> + Display> + Send,
+        group_ids: impl IntoIterator<Item = impl AsRef<Id> + Display> + Send,
     ) -> RequestResult<Vec<BatchInfo>> {
+        let query_ids = group_ids.into_iter().join(",");
         let response = self
             .get::<BatchResponse, StrPairArray<1>>(
                 add_base_url!("v2/groups"),
-                [("groupIds", group_ids.join(",").as_str())],
+                [("groupIds", query_ids.as_str())],
             )
             .await?;
         Ok(response.data)

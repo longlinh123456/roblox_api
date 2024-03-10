@@ -1,12 +1,4 @@
-#![deny(
-    clippy::suspicious,
-    clippy::complexity,
-    clippy::perf,
-    clippy::style,
-    clippy::pedantic,
-    clippy::correctness,
-    clippy::nursery
-)]
+#![deny(clippy::all, clippy::pedantic, clippy::nursery)]
 #![allow(
     clippy::missing_panics_doc,
     clippy::missing_errors_doc,

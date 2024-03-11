@@ -1,5 +1,3 @@
-use std::{borrow::Borrow, fmt::Display};
-
 use crate::{AuthenticatedClient, BaseClient, RequestResult};
 
 use async_trait::async_trait;
@@ -111,7 +109,7 @@ macro_rules! add_base_url {
 pub trait GroupsApi: BaseClient {
     async fn get_batch_info(
         &self,
-        group_ids: impl IntoIterator<Item = impl Borrow<Id> + Display> + Send,
+        group_ids: impl IntoIterator<Item = Id> + Send,
     ) -> RequestResult<Vec<BatchInfo>> {
         let query_ids = group_ids.into_iter().join(",");
         let response = self

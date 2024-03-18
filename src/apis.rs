@@ -1,7 +1,7 @@
 use std::mem;
 
 use async_stream::try_stream;
-use bounded_integer::BoundedU64;
+use deranged::{OptionRangedU64, RangedU64};
 use futures::{future::BoxFuture, stream::BoxStream, Future};
 use serde::{Deserialize, Deserializer};
 use serde_repr::Serialize_repr;
@@ -23,25 +23,28 @@ pub enum SortOrder {
     Descending = 2,
 }
 
-pub type Id = BoundedU64<1, { i64::MAX as u64 }>;
+pub type Id = RangedU64<1, { i64::MAX as u64 }>;
+pub type OptionId = OptionRangedU64<1, { i64::MAX as u64 }>;
 
 #[derive(Deserialize)]
-struct ZeroableId(Option<BoundedU64<0, { i64::MAX as u64 }>>);
+struct ZeroableId(OptionId);
 #[allow(clippy::fallible_impl_from)]
-impl From<ZeroableId> for Option<Id> {
+impl From<ZeroableId> for OptionId {
     fn from(value: ZeroableId) -> Self {
-        let inner_value = value.0?.get();
-        if inner_value == 0 {
-            None
-        } else {
-            Some(Id::new(inner_value).unwrap())
-        }
+        let inner_value = value.0.get();
+        inner_value.map_or(Self::None, |value| {
+            if value.get() == 0 {
+                Self::None
+            } else {
+                Self::Some(value)
+            }
+        })
     }
 }
 
 fn deserialize_zeroable_id<'de, D: Deserializer<'de>>(
     deserializer: D,
-) -> Result<Option<Id>, D::Error> {
+) -> Result<OptionId, D::Error> {
     Ok(ZeroableId::deserialize(deserializer)?.into())
 }
 

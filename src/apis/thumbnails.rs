@@ -5,7 +5,7 @@ use serde_repr::Serialize_repr;
 
 use crate::BaseClient;
 
-use super::{Id, RequestResult};
+use super::{OptionId, RequestResult};
 
 macro_rules! add_base_url {
     ($api_route: literal) => {
@@ -20,8 +20,8 @@ macro_rules! add_base_url {
 #[serde(rename_all = "camelCase")]
 pub struct BatchRequest {
     pub request_id: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub target_id: Option<Id>,
+    #[serde(skip_serializing_if = "crate::utils::option_id_is_none")]
+    pub target_id: OptionId,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub token: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -119,7 +119,7 @@ pub struct BatchThumbnail {
     pub error_code: i8,
     pub error_message: String,
     #[serde(deserialize_with = "super::deserialize_zeroable_id")]
-    pub target_id: Option<Id>,
+    pub target_id: OptionId,
     pub state: ThumbnailState,
     pub image_url: Option<String>,
     pub version: ThumbnailVersion,

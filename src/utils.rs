@@ -8,3 +8,6 @@ pub fn is_default<T: Default + PartialEq>(a: &T) -> bool {
 pub fn option_id_is_none(id: impl Borrow<OptionId>) -> bool {
     id.borrow().is_none()
 }
+pub fn is_false(a: impl Borrow<bool>) -> bool {
+    !a.borrow()
+}

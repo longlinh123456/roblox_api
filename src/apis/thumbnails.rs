@@ -31,7 +31,7 @@ pub struct BatchRequest<'a> {
     pub size: ThumbnailSize,
     #[serde(skip_serializing_if = "crate::utils::is_default")]
     pub format: ThumbnailFormat,
-    #[serde(rename = "isCircular")]
+    #[serde(rename = "isCircular", skip_serializing_if = "crate::utils::is_false")]
     pub circular: bool,
 }
 

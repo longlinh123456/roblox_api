@@ -18,15 +18,15 @@ macro_rules! add_base_url {
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct BatchRequest {
+pub struct BatchRequest<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub request_id: Option<String>,
+    pub request_id: Option<&'a str>,
     #[serde(skip_serializing_if = "crate::utils::option_id_is_none")]
     pub target_id: OptionId,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub token: Option<String>,
+    pub token: Option<&'a str>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub alias: Option<String>,
+    pub alias: Option<&'a str>,
     pub r#type: ThumbnailType,
     pub size: ThumbnailSize,
     #[serde(skip_serializing_if = "crate::utils::is_default")]

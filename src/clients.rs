@@ -1,6 +1,6 @@
+use ahash::RandomState;
 use async_trait::async_trait;
 use bytes::Bytes;
-use fxhash::FxBuildHasher;
 use itertools::Itertools;
 use parking_lot::RwLock;
 use reqwest::{
@@ -20,7 +20,7 @@ const CSRF_TOKEN_HEADER: &str = "x-csrf-token";
 const AUTHENTICATION_COOKIE_NAME: &str = ".roblosecurity";
 
 #[derive(Default, Debug)]
-struct StaticSharedJar(RwLock<HashMap<String, String, FxBuildHasher>>);
+struct StaticSharedJar(RwLock<HashMap<String, String, RandomState>>);
 impl StaticSharedJar {
     fn new() -> Self {
         Self::default()

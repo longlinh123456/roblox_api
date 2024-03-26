@@ -20,7 +20,7 @@ tracing = "0"
 async-trait = "0"
 serde = { version = "1", features = ["derive"] }
 bytes = "1"
-fxhash = "0"
+ahash = "0"
 chrono = { version = "0", features = ["serde"] }
 parking_lot = { version = "0", features = ["hardware-lock-elision"] }
 serde_repr = "0"

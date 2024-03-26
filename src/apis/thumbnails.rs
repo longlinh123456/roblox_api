@@ -19,7 +19,8 @@ macro_rules! add_base_url {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BatchRequest {
-    pub request_id: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub request_id: Option<String>,
     #[serde(skip_serializing_if = "crate::utils::option_id_is_none")]
     pub target_id: OptionId,
     #[serde(skip_serializing_if = "Option::is_none")]

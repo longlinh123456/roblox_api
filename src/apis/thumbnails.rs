@@ -143,3 +143,5 @@ pub trait ThumbnailsApi: BaseClient {
         Ok(response.data)
     }
 }
+
+impl<T: BaseClient> ThumbnailsApi for T {}

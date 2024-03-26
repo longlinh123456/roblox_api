@@ -133,7 +133,7 @@ struct BatchResponse {
 
 #[async_trait]
 pub trait ThumbnailsApi: BaseClient {
-    async fn batch_thumbnails(
+    async fn get_batch_thumbnails(
         &self,
         requests: &[BatchRequest],
     ) -> RequestResult<Vec<BatchThumbnail>> {

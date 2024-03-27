@@ -123,7 +123,7 @@ pub struct BatchThumbnail {
     pub target_id: OptionId,
     pub state: ThumbnailState,
     pub image_url: Option<String>,
-    pub version: ThumbnailVersion,
+    pub version: Option<ThumbnailVersion>,
 }
 
 #[derive(Debug, Deserialize, Clone)]

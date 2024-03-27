@@ -43,39 +43,70 @@ pub enum ThumbnailFormat {
 }
 
 #[derive(Debug, Serialize, is_enum_variant, Clone, Copy)]
-#[serde(rename_all = "camelCase")]
 pub enum ThumbnailSize {
+    #[serde(rename = "30x30")]
     _30x30,
+    #[serde(rename = "42x42")]
     _42x42,
+    #[serde(rename = "48x48")]
     _48x48,
+    #[serde(rename = "50x50")]
     _50x50,
+    #[serde(rename = "60x60")]
     _60x60,
+    #[serde(rename = "60x62")]
     _60x62,
+    #[serde(rename = "75x75")]
     _75x75,
+    #[serde(rename = "100x100")]
     _100x100,
+    #[serde(rename = "110x110")]
     _110x110,
+    #[serde(rename = "140x140")]
     _140x140,
+    #[serde(rename = "150x150")]
     _150x150,
+    #[serde(rename = "180x180")]
     _180x180,
+    #[serde(rename = "160x100")]
     _160x100,
+    #[serde(rename = "160x600")]
     _160x600,
+    #[serde(rename = "250x250")]
     _250x250,
+    #[serde(rename = "256x144")]
     _256x144,
+    #[serde(rename = "300x250")]
     _300x250,
+    #[serde(rename = "352x352")]
     _352x352,
+    #[serde(rename = "304x166")]
     _304x166,
+    #[serde(rename = "384x216")]
     _384x216,
+    #[serde(rename = "396x216")]
     _396x216,
+    #[serde(rename = "420x420")]
     _420x420,
+    #[serde(rename = "480x270")]
     _480x270,
+    #[serde(rename = "512x512")]
     _512x512,
+    #[serde(rename = "576x324")]
     _576x324,
+    #[serde(rename = "700x700")]
     _700x700,
+    #[serde(rename = "720x720")]
     _720x720,
+    #[serde(rename = "728x90")]
     _728x90,
+    #[serde(rename = "768x432")]
     _768x432,
+    #[serde(rename = "1200x80")]
     _1200x80,
+    #[serde(rename = "256x256")]
     _256x256,
+    #[serde(rename = "128x128")]
     _128x128,
 }
 

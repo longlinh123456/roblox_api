@@ -16,7 +16,7 @@ macro_rules! add_base_url {
     };
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct BatchRequest<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -35,14 +35,14 @@ pub struct BatchRequest<'a> {
     pub circular: bool,
 }
 
-#[derive(Debug, Serialize, Default, PartialEq, Eq)]
+#[derive(Debug, Serialize, Default, PartialEq, Eq, Clone, Copy)]
 pub enum ThumbnailFormat {
     #[default]
     Png,
     Jpeg,
 }
 
-#[derive(Debug, Serialize, is_enum_variant)]
+#[derive(Debug, Serialize, is_enum_variant, Clone, Copy)]
 #[serde(rename_all = "camelCase")]
 pub enum ThumbnailSize {
     _30x30,
@@ -101,19 +101,19 @@ pub enum ThumbnailType {
     Look = 17,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, Copy)]
 pub enum ThumbnailState {
     Completed,
     Blocked,
     Error,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, Copy)]
 pub enum ThumbnailVersion {
     TN3,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct BatchThumbnail {
     pub request_id: String,
@@ -126,7 +126,7 @@ pub struct BatchThumbnail {
     pub version: ThumbnailVersion,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 struct BatchResponse {
     data: Vec<BatchThumbnail>,

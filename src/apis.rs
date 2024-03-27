@@ -26,7 +26,7 @@ pub enum SortOrder {
 pub type Id = RangedU64<1, { i64::MAX as u64 }>;
 pub type OptionId = OptionRangedU64<1, { i64::MAX as u64 }>;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone, Copy)]
 struct ZeroableId(OptionId);
 #[allow(clippy::fallible_impl_from)]
 impl From<ZeroableId> for OptionId {
@@ -48,14 +48,14 @@ fn deserialize_zeroable_id<'de, D: Deserializer<'de>>(
     Ok(ZeroableId::deserialize(deserializer)?.into())
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 #[serde(untagged)]
 enum ResultDef<T, E> {
     Ok(T),
     Err(E),
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 #[serde(from = "ResultDef<T, E>")]
 pub(crate) struct UntaggedResult<T, E>(pub(crate) Result<T, E>);
 impl<T, E> From<ResultDef<T, E>> for UntaggedResult<T, E> {
@@ -70,7 +70,7 @@ impl<T, E> From<ResultDef<T, E>> for UntaggedResult<T, E> {
 pub type RequestResult<T> = Result<T, Error>;
 pub(crate) type ApiResponse<T> = UntaggedResult<T, ApiError>;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone, Copy)]
 #[serde(deny_unknown_fields)]
 pub struct Empty {}
 
@@ -134,7 +134,7 @@ pub enum RequestLimit {
     OneHundred = 100,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct Page<T> {
     pub previous_page_cursor: Option<String>,

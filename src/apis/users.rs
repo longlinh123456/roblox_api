@@ -5,7 +5,7 @@ use crate::{AuthenticatedClient, RequestResult};
 
 use super::Id;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct AuthenticatedUser {
     pub id: Id,

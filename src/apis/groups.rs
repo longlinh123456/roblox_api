@@ -7,26 +7,26 @@ use serde::{Deserialize, Serialize};
 
 use super::{Empty, Id, StrPairArray};
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub struct Shout {
     pub body: String,
     pub poster: DetailedOwner,
     pub created: DateTime<Utc>,
     pub updated: DateTime<Utc>,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone, Copy)]
 pub struct BatchOwner {
     pub id: Id,
     #[serde(flatten)]
     pub r#type: OwnerType,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone, Copy)]
 #[serde(tag = "type")]
 pub enum OwnerType {
     User,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DetailedOwner {
     pub has_verified_badge: bool,
@@ -34,7 +34,7 @@ pub struct DetailedOwner {
     pub username: String,
     pub display_name: String,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct BatchInfo {
     pub id: Id,
@@ -44,11 +44,11 @@ pub struct BatchInfo {
     pub created: DateTime<Utc>,
     pub has_verified_badge: bool,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 struct BatchResponse {
     data: Vec<BatchInfo>,
 }
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 #[allow(clippy::struct_excessive_bools)]
 pub struct DetailedInfo {
@@ -63,7 +63,7 @@ pub struct DetailedInfo {
     pub has_verified_badge: bool,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SolvedCaptcha<'a> {
     pub session_id: &'a str,
@@ -74,7 +74,7 @@ pub struct SolvedCaptcha<'a> {
     pub challenge_id: &'a str,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone, Copy)]
 #[serde(rename_all = "camelCase")]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Metadata {

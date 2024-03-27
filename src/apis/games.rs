@@ -13,7 +13,7 @@ pub enum ServerType {
     Friend = 1,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct PublicServer {
     pub id: String,
@@ -25,7 +25,7 @@ pub struct PublicServer {
     pub ping: u16,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ServerListPlayer {
     pub player_token: String,
@@ -43,7 +43,7 @@ macro_rules! add_base_url {
     };
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 struct BatchParameters<'a> {
     #[serde(skip_serializing_if = "crate::utils::is_default")]

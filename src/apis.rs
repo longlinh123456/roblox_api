@@ -38,12 +38,12 @@ impl From<ZeroableId> for OptionId {
     }
 }
 
+#[allow(clippy::unnecessary_wraps)]
 fn deserialize_zeroable_id<'de, D: Deserializer<'de>>(
     deserializer: D,
 ) -> Result<OptionId, D::Error> {
-    let res = ZeroableId::deserialize(deserializer);
-    println!("{res:?}");
-    Ok(res?.into())
+    let res = ZeroableId::deserialize(deserializer).unwrap();
+    Ok(res.into())
 }
 
 #[derive(Debug, Deserialize, Clone)]

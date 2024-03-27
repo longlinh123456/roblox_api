@@ -26,7 +26,7 @@ pub enum SortOrder {
 pub type Id = RangedU64<1, { i64::MAX as u64 }>;
 pub type OptionId = OptionRangedU64<1, { i64::MAX as u64 }>;
 
-#[derive(Deserialize, Clone, Copy)]
+#[derive(Debug, Deserialize, Clone, Copy)]
 #[serde(transparent)]
 struct ZeroableId(OptionRangedU64<0, { i64::MAX as u64 }>);
 impl From<ZeroableId> for OptionId {
@@ -41,17 +41,19 @@ impl From<ZeroableId> for OptionId {
 fn deserialize_zeroable_id<'de, D: Deserializer<'de>>(
     deserializer: D,
 ) -> Result<OptionId, D::Error> {
-    Ok(ZeroableId::deserialize(deserializer)?.into())
+    let res = ZeroableId::deserialize(deserializer);
+    println!("{res:?}");
+    Ok(res?.into())
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone)]
 #[serde(untagged)]
 enum ResultDef<T, E> {
     Ok(T),
     Err(E),
 }
 
-#[derive(Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone)]
 #[serde(from = "ResultDef<T, E>")]
 pub(crate) struct UntaggedResult<T, E>(pub(crate) Result<T, E>);
 impl<T, E> From<ResultDef<T, E>> for UntaggedResult<T, E> {

@@ -4,6 +4,7 @@ use crate::{
 };
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 
 use super::{Id, Page, Paginator, RequestResult};
 
@@ -16,7 +17,7 @@ pub enum ServerType {
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct PublicServer {
-    pub id: String,
+    pub id: Uuid,
     pub max_players: u16,
     pub playing: u16,
     pub player_tokens: Vec<String>,

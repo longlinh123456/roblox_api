@@ -27,17 +27,13 @@ pub type Id = RangedU64<1, { i64::MAX as u64 }>;
 pub type OptionId = OptionRangedU64<1, { i64::MAX as u64 }>;
 
 #[derive(Deserialize, Clone, Copy)]
-struct ZeroableId(OptionId);
+struct ZeroableId(OptionRangedU64<0, { i64::MAX as u64 }>);
 #[allow(clippy::fallible_impl_from)]
 impl From<ZeroableId> for OptionId {
     fn from(value: ZeroableId) -> Self {
         let inner_value = value.0.get();
         inner_value.map_or(Self::None, |value| {
-            if value.get() == 0 {
-                Self::None
-            } else {
-                Self::Some(value)
-            }
+            value.narrow::<1, { i64::MAX as u64 }>().into()
         })
     }
 }

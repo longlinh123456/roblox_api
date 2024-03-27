@@ -116,7 +116,7 @@ pub enum ThumbnailVersion {
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct BatchThumbnail {
-    pub request_id: String,
+    pub request_id: Option<String>,
     pub error_code: i8,
     pub error_message: String,
     #[serde(deserialize_with = "super::deserialize_zeroable_id")]

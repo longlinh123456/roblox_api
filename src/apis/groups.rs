@@ -110,9 +110,9 @@ pub trait GroupsApi: BaseClient {
     /// Limit of 100 groups/request
     async fn get_group_info_batch(
         &self,
-        group_ids: impl IntoIterator<Item = Id> + Send,
+        groups: impl IntoIterator<Item = Id> + Send,
     ) -> RequestResult<Vec<BatchGroupInfo>> {
-        let query_ids = group_ids.into_iter().join(",");
+        let query_ids = groups.into_iter().join(",");
         let response = self
             .get::<BatchResponse, StrPairArray<1>>(
                 add_base_url!("v2/groups"),

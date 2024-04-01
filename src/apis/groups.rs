@@ -36,7 +36,7 @@ pub struct DetailedOwner {
 }
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct BatchInfo {
+pub struct BatchGroupInfo {
     pub id: Id,
     pub name: String,
     pub description: String,
@@ -46,12 +46,12 @@ pub struct BatchInfo {
 }
 #[derive(Deserialize, Debug, Clone)]
 struct BatchResponse {
-    data: Vec<BatchInfo>,
+    data: Vec<BatchGroupInfo>,
 }
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 #[allow(clippy::struct_excessive_bools)]
-pub struct DetailedInfo {
+pub struct SingleGroupInfo {
     pub id: Id,
     pub name: String,
     pub description: String,
@@ -77,7 +77,7 @@ pub struct SolvedCaptcha<'a> {
 #[derive(Deserialize, Debug, Clone, Copy)]
 #[serde(rename_all = "camelCase")]
 #[allow(clippy::struct_excessive_bools)]
-pub struct Metadata {
+pub struct GroupMetadata {
     pub group_limit: u16,
     pub current_group_count: u16,
     pub group_status_max_length: u16,
@@ -108,10 +108,10 @@ macro_rules! add_base_url {
 #[async_trait]
 pub trait GroupsApi: BaseClient {
     /// Limit of 100 groups/request
-    async fn get_batch_info(
+    async fn get_group_info_batch(
         &self,
         group_ids: impl IntoIterator<Item = Id> + Send,
-    ) -> RequestResult<Vec<BatchInfo>> {
+    ) -> RequestResult<Vec<BatchGroupInfo>> {
         let query_ids = group_ids.into_iter().join(",");
         let response = self
             .get::<BatchResponse, StrPairArray<1>>(
@@ -121,12 +121,12 @@ pub trait GroupsApi: BaseClient {
             .await?;
         Ok(response.data)
     }
-    async fn get_detailed_info(&self, group: Id) -> RequestResult<DetailedInfo> {
-        self.get::<DetailedInfo, ()>(add_base_url!("v1/groups/{}", group), None)
+    async fn get_group_info(&self, group: Id) -> RequestResult<SingleGroupInfo> {
+        self.get::<SingleGroupInfo, ()>(add_base_url!("v1/groups/{}", group), None)
             .await
     }
-    async fn get_metadata(&self) -> RequestResult<Metadata> {
-        self.get::<Metadata, ()>(add_base_url!("v1/groups/metadata"), None)
+    async fn get_metadata(&self) -> RequestResult<GroupMetadata> {
+        self.get::<GroupMetadata, ()>(add_base_url!("v1/groups/metadata"), None)
             .await
     }
 }

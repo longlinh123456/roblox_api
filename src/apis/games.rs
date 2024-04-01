@@ -62,6 +62,7 @@ struct BatchParameters<'a> {
 
 #[async_trait]
 pub trait GamesApi: BaseClient {
+    /// Rate limit: 3 requests/s, burst of 10 requests
     fn get_public_servers<S: Into<String>>(
         &self,
         place_id: Id,

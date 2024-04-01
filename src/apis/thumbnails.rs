@@ -166,6 +166,7 @@ struct BatchResponse {
 #[async_trait]
 pub trait ThumbnailsApi: BaseClient {
     /// Limit of 100 thumbnails/request
+    /// Rate limit: 40 requests/s, burst of 50 requests
     async fn get_batch_thumbnails(
         &self,
         requests: &[BatchRequest],

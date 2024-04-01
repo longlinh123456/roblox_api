@@ -107,6 +107,7 @@ macro_rules! add_base_url {
 }
 #[async_trait]
 pub trait GroupsApi: BaseClient {
+    /// Limit of 100 groups/request
     async fn get_batch_info(
         &self,
         group_ids: impl IntoIterator<Item = Id> + Send,

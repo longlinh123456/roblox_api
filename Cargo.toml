@@ -28,3 +28,4 @@ derive_is_enum_variant = "0"
 futures = "0"
 async-stream = "0"
 uuid = { version = "1", features = ["v4", "serde"] }
+serde_iter = "0"

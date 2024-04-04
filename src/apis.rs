@@ -9,6 +9,7 @@ use thiserror::Error;
 
 pub mod economy;
 pub mod games;
+pub mod general;
 pub mod groups;
 pub mod thumbnails;
 pub mod users;

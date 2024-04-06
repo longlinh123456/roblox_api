@@ -78,7 +78,21 @@ pub enum Error {
     Api(#[from] ApiError),
 
     #[error("request error: {0}")]
-    Request(#[from] reqwest::Error),
+    Request(reqwest::Error),
+
+    #[error("roblox rate limit without error")]
+    RateLimitWithoutError,
+}
+
+#[allow(clippy::fallible_impl_from)]
+impl From<reqwest::Error> for Error {
+    fn from(value: reqwest::Error) -> Self {
+        if value.is_decode() && value.status().unwrap() == 429 {
+            Self::RateLimitWithoutError
+        } else {
+            Self::Request(value)
+        }
+    }
 }
 
 #[derive(Debug, Deserialize, Clone, Default)]

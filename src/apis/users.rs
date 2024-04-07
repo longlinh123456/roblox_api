@@ -121,3 +121,5 @@ pub trait UsersApi: BaseClient {
         Ok(res.data)
     }
 }
+
+impl<T: BaseClient> UsersApi for T {}

@@ -10,7 +10,7 @@ use reqwest::{
 use serde::{de::DeserializeOwned, Serialize};
 use std::{collections::HashMap, sync::Arc};
 
-use crate::apis::ApiResponse;
+use crate::apis::{ApiResponse, Error};
 use crate::{AuthenticatedClient, BaseClient, RequestResult};
 
 pub use reqwest::ClientBuilder;
@@ -131,7 +131,12 @@ impl InnerClient {
             *self.csrf_token.write() = Some(csrf_token.to_str().unwrap().to_owned());
             response = builder.header(CSRF_TOKEN_HEADER, csrf_token).send().await?;
         }
-        Ok(response.json::<ApiResponse<T>>().await?.0?)
+        let status = response.status();
+        let res = response.json::<ApiResponse<T>>().await;
+        match res {
+            Err(err) if err.is_decode() && status == 429 => Err(Error::RateLimitWithoutBody),
+            _ => Ok(res?.0?),
+        }
     }
     pub fn new(builder: ReqwestClientBuilder) -> Self {
         Self {
@@ -229,7 +234,12 @@ impl InnerCookieClient {
             *self.csrf_token.write() = Some(csrf_token.to_str().unwrap().to_owned());
             response = builder.header(CSRF_TOKEN_HEADER, csrf_token).send().await?;
         }
-        Ok(response.json::<ApiResponse<T>>().await?.0?)
+        let status = response.status();
+        let res = response.json::<ApiResponse<T>>().await;
+        match res {
+            Err(err) if err.is_decode() && status == 429 => Err(Error::RateLimitWithoutBody),
+            _ => Ok(res?.0?),
+        }
     }
     fn new(builder: ReqwestClientBuilder, auth_cookie: &str) -> Self {
         let jar = Arc::new(StaticSharedJar::new());

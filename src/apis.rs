@@ -2,6 +2,7 @@ use std::mem;
 
 use async_stream::try_stream;
 use deranged::{OptionRangedU64, RangedU64};
+use derive_is_enum_variant::is_enum_variant;
 use futures::{future::BoxFuture, stream::BoxStream, Future};
 use serde::{Deserialize, Deserializer};
 use serde_repr::Serialize_repr;
@@ -71,7 +72,7 @@ pub(crate) type ApiResponse<T> = UntaggedResult<T, ApiError>;
 #[serde(deny_unknown_fields)]
 pub struct Empty {}
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, is_enum_variant)]
 #[non_exhaustive]
 pub enum Error {
     #[error("roblox api error: {0}")]
@@ -80,8 +81,8 @@ pub enum Error {
     #[error("request error: {0}")]
     Request(#[from] reqwest::Error),
 
-    #[error("roblox rate limit without body")]
-    RateLimitWithoutBody,
+    #[error("roblox rate limit")]
+    RateLimit,
 }
 
 #[derive(Debug, Deserialize, Clone, Default)]

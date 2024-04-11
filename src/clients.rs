@@ -131,12 +131,10 @@ impl InnerClient {
             *self.csrf_token.write() = Some(csrf_token.to_str().unwrap().to_owned());
             response = builder.header(CSRF_TOKEN_HEADER, csrf_token).send().await?;
         }
-        let status = response.status();
-        let res = response.json::<ApiResponse<T>>().await;
-        match res {
-            Err(err) if err.is_decode() && status == 429 => Err(Error::RateLimitWithoutBody),
-            _ => Ok(res?.0?),
-        }
+        if response.status() == 429 {
+            return Err(Error::RateLimit);
+        };
+        Ok(response.json::<ApiResponse<T>>().await?.0?)
     }
     pub fn new(builder: ReqwestClientBuilder) -> Self {
         Self {
@@ -234,12 +232,10 @@ impl InnerCookieClient {
             *self.csrf_token.write() = Some(csrf_token.to_str().unwrap().to_owned());
             response = builder.header(CSRF_TOKEN_HEADER, csrf_token).send().await?;
         }
-        let status = response.status();
-        let res = response.json::<ApiResponse<T>>().await;
-        match res {
-            Err(err) if err.is_decode() && status == 429 => Err(Error::RateLimitWithoutBody),
-            _ => Ok(res?.0?),
-        }
+        if response.status() == 429 {
+            return Err(Error::RateLimit);
+        };
+        Ok(response.json::<ApiResponse<T>>().await?.0?)
     }
     fn new(builder: ReqwestClientBuilder, auth_cookie: &str) -> Self {
         let jar = Arc::new(StaticSharedJar::new());

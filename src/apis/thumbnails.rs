@@ -36,7 +36,7 @@ pub struct BatchRequest<'a> {
     pub circular: bool,
 }
 
-#[derive(Debug, Serialize, Default, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, Serialize, Default, PartialEq, Eq, Clone, Copy, is_enum_variant)]
 pub enum ThumbnailFormat {
     #[default]
     Png,
@@ -133,7 +133,7 @@ pub enum ThumbnailType {
     Look = 17,
 }
 
-#[derive(Debug, Deserialize, Clone, Copy)]
+#[derive(Debug, Deserialize, Clone, Copy, is_enum_variant)]
 pub enum ThumbnailState {
     Completed,
     Blocked,

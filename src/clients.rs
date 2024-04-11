@@ -1,6 +1,9 @@
 use ahash::RandomState;
+use arc_swap::access::Access;
+use arc_swap::ArcSwapOption;
 use async_trait::async_trait;
 use bytes::Bytes;
+use dashmap::DashMap;
 use itertools::Itertools;
 use parking_lot::RwLock;
 use reqwest::{
@@ -20,35 +23,30 @@ const CSRF_TOKEN_HEADER: &str = "x-csrf-token";
 const AUTHENTICATION_COOKIE_NAME: &str = ".roblosecurity";
 
 #[derive(Default, Debug)]
-struct StaticSharedJar(RwLock<HashMap<String, String, RandomState>>);
+struct StaticSharedJar(DashMap<String, String, RandomState>);
 impl StaticSharedJar {
     fn new() -> Self {
         Self::default()
     }
     fn insert(&self, name: &str, value: &str) {
-        let mut cookie_map = self.0.write();
-        cookie_map.insert(String::from(name), String::from(value));
+        self.0.insert(String::from(name), String::from(value));
     }
     fn remove(&self, name: &str) {
-        let mut cookie_map = self.0.write();
-        cookie_map.remove(name);
+        self.0.remove(name);
     }
     fn get(&self, name: &str) -> Option<String> {
-        let cookie_map = self.0.read();
-        cookie_map.get(name).cloned()
+        self.0.get(name).map(|x| x.clone())
     }
     fn clear(&self) {
-        let mut cookie_map = self.0.write();
-        cookie_map.clear();
+        self.0.clear();
     }
 }
 impl CookieStore for StaticSharedJar {
     fn cookies(&self, _url: &Url) -> Option<HeaderValue> {
         let cookie_string = self
             .0
-            .read()
             .iter()
-            .map(|(name, value)| format!("{name}={value}"))
+            .map(|x| format!("{}={}", x.key(), x.value()))
             .join("; ");
 
         if cookie_string.is_empty() {
@@ -89,7 +87,7 @@ impl BaseClient for Client {
 #[derive(Debug, Default)]
 struct InnerClient {
     client: ReqwestClient,
-    csrf_token: RwLock<Option<String>>,
+    csrf_token: ArcSwapOption<String>,
 }
 impl InnerClient {
     fn build_request<U: Serialize, V: Serialize>(
@@ -98,6 +96,7 @@ impl InnerClient {
         url: impl IntoUrl + Send,
         query: impl Into<Option<U>> + Send,
         payload: impl Into<Option<V>> + Send,
+        csrf_token: Option<&str>,
     ) -> RequestBuilder {
         let is_get = matches!(method, Method::GET);
         let mut builder = self.client.request(method, url);
@@ -111,8 +110,8 @@ impl InnerClient {
                 .header("Content-Length", 0)
                 .header("Content-Type", "application/json"),
         };
-        if !is_get {
-            if let Some(csrf_token) = &*self.csrf_token.read() {
+        if let Some(csrf_token) = csrf_token {
+            if !is_get {
                 builder = builder.header(CSRF_TOKEN_HEADER, csrf_token);
             }
         }
@@ -125,10 +124,20 @@ impl InnerClient {
         query: impl Into<Option<U>> + Send,
         payload: impl Into<Option<V>> + Send,
     ) -> RequestResult<T> {
-        let builder = self.build_request(method, url, query, payload);
+        let old_csrf_token = self.csrf_token.load();
+        let builder = self.build_request(
+            method,
+            url,
+            query,
+            payload,
+            old_csrf_token.as_deref().map(String::as_str),
+        );
         let mut response = builder.try_clone().unwrap().send().await?;
         if let Some(csrf_token) = response.headers().get(CSRF_TOKEN_HEADER) {
-            *self.csrf_token.write() = Some(csrf_token.to_str().unwrap().to_owned());
+            self.csrf_token.compare_and_swap(
+                old_csrf_token,
+                Some(Arc::new(csrf_token.to_str().unwrap().to_string())),
+            );
             response = builder.header(CSRF_TOKEN_HEADER, csrf_token).send().await?;
         }
         if response.status() == 429 {
@@ -139,7 +148,7 @@ impl InnerClient {
     pub fn new(builder: ReqwestClientBuilder) -> Self {
         Self {
             client: builder.build().unwrap(),
-            csrf_token: RwLock::new(None),
+            csrf_token: ArcSwapOption::const_empty(),
         }
     }
 }
@@ -189,7 +198,7 @@ impl AuthenticatedClient for CookieClient {
 #[derive(Debug)]
 struct InnerCookieClient {
     client: ReqwestClient,
-    csrf_token: RwLock<Option<String>>,
+    csrf_token: ArcSwapOption<String>,
     jar: Arc<StaticSharedJar>,
 }
 impl InnerCookieClient {
@@ -199,6 +208,7 @@ impl InnerCookieClient {
         url: impl IntoUrl + Send,
         query: impl Into<Option<U>> + Send,
         payload: impl Into<Option<V>> + Send,
+        csrf_token: Option<&str>,
     ) -> RequestBuilder {
         let is_get = matches!(method, Method::GET);
         let mut builder = self.client.request(method, url);
@@ -212,8 +222,8 @@ impl InnerCookieClient {
                 .header("Content-Length", 0)
                 .header("Content-Type", "application/json"),
         };
-        if !is_get {
-            if let Some(csrf_token) = &*self.csrf_token.read() {
+        if let Some(csrf_token) = csrf_token {
+            if !is_get {
                 builder = builder.header(CSRF_TOKEN_HEADER, csrf_token);
             }
         }
@@ -226,10 +236,20 @@ impl InnerCookieClient {
         query: impl Into<Option<U>> + Send,
         payload: impl Into<Option<V>> + Send,
     ) -> RequestResult<T> {
-        let builder = self.build_request(method, url, query, payload);
+        let old_csrf_token = self.csrf_token.load();
+        let builder = self.build_request(
+            method,
+            url,
+            query,
+            payload,
+            old_csrf_token.as_deref().map(String::as_str),
+        );
         let mut response = builder.try_clone().unwrap().send().await?;
         if let Some(csrf_token) = response.headers().get(CSRF_TOKEN_HEADER) {
-            *self.csrf_token.write() = Some(csrf_token.to_str().unwrap().to_owned());
+            self.csrf_token.compare_and_swap(
+                old_csrf_token,
+                Some(Arc::new(csrf_token.to_str().unwrap().to_string())),
+            );
             response = builder.header(CSRF_TOKEN_HEADER, csrf_token).send().await?;
         }
         if response.status() == 429 {
@@ -242,7 +262,7 @@ impl InnerCookieClient {
         jar.insert(AUTHENTICATION_COOKIE_NAME, auth_cookie);
         Self {
             client: builder.cookie_provider(jar.clone()).build().unwrap(),
-            csrf_token: RwLock::new(None),
+            csrf_token: ArcSwapOption::const_empty(),
             jar,
         }
     }

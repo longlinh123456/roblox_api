@@ -85,16 +85,16 @@ impl BaseClient for Client {
 #[derive(Debug, Default)]
 struct InnerClient {
     client: ReqwestClient,
-    csrf_token: ArcSwapOption<String>,
+    csrf_token: ArcSwapOption<HeaderValue>,
 }
 impl InnerClient {
-    fn build_request<U: Serialize, V: Serialize>(
+    fn build_request<'a, U: Serialize, V: Serialize>(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
         query: impl Into<Option<U>> + Send,
         payload: impl Into<Option<V>> + Send,
-        csrf_token: Option<&str>,
+        csrf_token: impl Into<Option<&'a HeaderValue>>,
     ) -> RequestBuilder {
         let is_get = matches!(method, Method::GET);
         let mut builder = self.client.request(method, url);
@@ -108,7 +108,7 @@ impl InnerClient {
                 .header("Content-Length", 0)
                 .header("Content-Type", "application/json"),
         };
-        if let Some(csrf_token) = csrf_token {
+        if let Some(csrf_token) = csrf_token.into() {
             if !is_get {
                 builder = builder.header(CSRF_TOKEN_HEADER, csrf_token);
             }
@@ -123,17 +123,10 @@ impl InnerClient {
         payload: impl Into<Option<V>> + Send,
     ) -> RequestResult<T> {
         let old_csrf_token = self.csrf_token.load();
-        let builder = self.build_request(
-            method,
-            url,
-            query,
-            payload,
-            old_csrf_token.as_deref().map(String::as_str),
-        );
+        let builder = self.build_request(method, url, query, payload, old_csrf_token.as_deref());
         let mut response = builder.try_clone().unwrap().send().await?;
         if let Some(csrf_token) = response.headers().get(CSRF_TOKEN_HEADER) {
-            self.csrf_token
-                .store(Some(Arc::new(csrf_token.to_str().unwrap().to_string())));
+            self.csrf_token.store(Some(Arc::new(csrf_token.to_owned())));
             response = builder.header(CSRF_TOKEN_HEADER, csrf_token).send().await?;
         }
         if response.status() == 429 {
@@ -194,17 +187,17 @@ impl AuthenticatedClient for CookieClient {
 #[derive(Debug)]
 struct InnerCookieClient {
     client: ReqwestClient,
-    csrf_token: ArcSwapOption<String>,
+    csrf_token: ArcSwapOption<HeaderValue>,
     jar: Arc<StaticSharedJar>,
 }
 impl InnerCookieClient {
-    fn build_request<U: Serialize, V: Serialize>(
+    fn build_request<'a, U: Serialize, V: Serialize>(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
         query: impl Into<Option<U>> + Send,
         payload: impl Into<Option<V>> + Send,
-        csrf_token: Option<&str>,
+        csrf_token: impl Into<Option<&'a HeaderValue>>,
     ) -> RequestBuilder {
         let is_get = matches!(method, Method::GET);
         let mut builder = self.client.request(method, url);
@@ -218,7 +211,7 @@ impl InnerCookieClient {
                 .header("Content-Length", 0)
                 .header("Content-Type", "application/json"),
         };
-        if let Some(csrf_token) = csrf_token {
+        if let Some(csrf_token) = csrf_token.into() {
             if !is_get {
                 builder = builder.header(CSRF_TOKEN_HEADER, csrf_token);
             }
@@ -233,17 +226,10 @@ impl InnerCookieClient {
         payload: impl Into<Option<V>> + Send,
     ) -> RequestResult<T> {
         let old_csrf_token = self.csrf_token.load();
-        let builder = self.build_request(
-            method,
-            url,
-            query,
-            payload,
-            old_csrf_token.as_deref().map(String::as_str),
-        );
+        let builder = self.build_request(method, url, query, payload, old_csrf_token.as_deref());
         let mut response = builder.try_clone().unwrap().send().await?;
         if let Some(csrf_token) = response.headers().get(CSRF_TOKEN_HEADER) {
-            self.csrf_token
-                .swap(Some(Arc::new(csrf_token.to_str().unwrap().to_string())));
+            self.csrf_token.swap(Some(Arc::new(csrf_token.to_owned())));
             response = builder.header(CSRF_TOKEN_HEADER, csrf_token).send().await?;
         }
         if response.status() == 429 {

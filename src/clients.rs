@@ -58,36 +58,10 @@ impl CookieStore for StaticSharedJar {
 
 #[derive(Debug, Clone, Default)]
 pub struct Client {
-    inner: Arc<InnerClient>,
+    client: ReqwestClient,
+    csrf_token: Arc<ArcSwapOption<HeaderValue>>,
 }
 impl Client {
-    #[must_use]
-    pub fn new(builder: ReqwestClientBuilder) -> Self {
-        Self {
-            inner: Arc::new(InnerClient::new(builder)),
-        }
-    }
-}
-
-#[async_trait]
-impl BaseClient for Client {
-    async fn request<'a, T: DeserializeOwned, U: Serialize, V: Serialize>(
-        &self,
-        method: Method,
-        url: impl IntoUrl + Send,
-        query: impl Into<Option<U>> + Send,
-        payload: impl Into<Option<V>> + Send,
-    ) -> RequestResult<T> {
-        self.inner.request(method, url, query, payload).await
-    }
-}
-
-#[derive(Debug, Default)]
-struct InnerClient {
-    client: ReqwestClient,
-    csrf_token: ArcSwapOption<HeaderValue>,
-}
-impl InnerClient {
     fn build_request<'a, U: Serialize, V: Serialize>(
         &self,
         method: Method,
@@ -134,63 +108,35 @@ impl InnerClient {
         };
         Ok(response.json::<ApiResponse<T>>().await?.0?)
     }
+    #[must_use]
     pub fn new(builder: ReqwestClientBuilder) -> Self {
         Self {
             client: builder.build().unwrap(),
-            csrf_token: ArcSwapOption::const_empty(),
+            csrf_token: Arc::new(ArcSwapOption::const_empty()),
         }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub struct CookieClient {
-    inner: Arc<InnerCookieClient>,
-}
-impl CookieClient {
-    #[must_use]
-    pub fn new(builder: ReqwestClientBuilder, auth_cookie: &str) -> Self {
-        Self {
-            inner: Arc::new(InnerCookieClient::new(builder, auth_cookie)),
-        }
-    }
-    pub fn insert_cookie(&self, name: &str, value: &str) {
-        self.inner.insert_cookie(name, value);
-    }
-    pub fn remove_cookie(&self, name: &str) {
-        self.inner.remove_cookie(name);
-    }
-    #[must_use]
-    pub fn get_cookie(&self, name: &str) -> Option<String> {
-        self.inner.get_cookie(name)
-    }
-    pub fn clear_cookies(&self) {
-        self.inner.clear_cookies();
-    }
-    pub fn set_auth_cookie(&self, cookie: &str) {
-        self.inner.set_auth_cookie(cookie);
     }
 }
 
 #[async_trait]
-impl AuthenticatedClient for CookieClient {
-    async fn authenticated_request<'a, T: DeserializeOwned, U: Serialize, V: Serialize>(
+impl BaseClient for Client {
+    async fn request<'a, T: DeserializeOwned, U: Serialize, V: Serialize>(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
         query: impl Into<Option<U>> + Send,
         payload: impl Into<Option<V>> + Send,
     ) -> RequestResult<T> {
-        self.inner.request(method, url, query, payload).await
+        self.request(method, url, query, payload).await
     }
 }
 
-#[derive(Debug)]
-struct InnerCookieClient {
+#[derive(Debug, Clone, Default)]
+pub struct CookieClient {
     client: ReqwestClient,
-    csrf_token: ArcSwapOption<HeaderValue>,
+    csrf_token: Arc<ArcSwapOption<HeaderValue>>,
     jar: Arc<StaticSharedJar>,
 }
-impl InnerCookieClient {
+impl CookieClient {
     fn build_request<'a, U: Serialize, V: Serialize>(
         &self,
         method: Method,
@@ -237,12 +183,13 @@ impl InnerCookieClient {
         };
         Ok(response.json::<ApiResponse<T>>().await?.0?)
     }
-    fn new(builder: ReqwestClientBuilder, auth_cookie: &str) -> Self {
+    #[must_use]
+    pub fn new(builder: ReqwestClientBuilder, auth_cookie: &str) -> Self {
         let jar = Arc::new(StaticSharedJar::new());
         jar.insert(AUTHENTICATION_COOKIE_NAME, auth_cookie);
         Self {
             client: builder.cookie_provider(jar.clone()).build().unwrap(),
-            csrf_token: ArcSwapOption::const_empty(),
+            csrf_token: Arc::new(ArcSwapOption::const_empty()),
             jar,
         }
     }
@@ -252,6 +199,7 @@ impl InnerCookieClient {
     pub fn remove_cookie(&self, name: &str) {
         self.jar.remove(name);
     }
+    #[must_use]
     pub fn get_cookie(&self, name: &str) -> Option<String> {
         self.jar.get(name)
     }
@@ -260,5 +208,18 @@ impl InnerCookieClient {
     }
     pub fn set_auth_cookie(&self, cookie: &str) {
         self.jar.insert(".ROBLOSECURITY", cookie);
+    }
+}
+
+#[async_trait]
+impl AuthenticatedClient for CookieClient {
+    async fn authenticated_request<'a, T: DeserializeOwned, U: Serialize, V: Serialize>(
+        &self,
+        method: Method,
+        url: impl IntoUrl + Send,
+        query: impl Into<Option<U>> + Send,
+        payload: impl Into<Option<V>> + Send,
+    ) -> RequestResult<T> {
+        self.request(method, url, query, payload).await
     }
 }

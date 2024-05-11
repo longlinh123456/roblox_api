@@ -1,17 +1,15 @@
 use ahash::RandomState;
-use arc_swap::access::Access;
 use arc_swap::ArcSwapOption;
 use async_trait::async_trait;
 use bytes::Bytes;
 use dashmap::DashMap;
 use itertools::Itertools;
-use parking_lot::RwLock;
 use reqwest::{
     cookie::CookieStore, header::HeaderValue, Client as ReqwestClient,
     ClientBuilder as ReqwestClientBuilder, IntoUrl, Method, RequestBuilder, Url,
 };
 use serde::{de::DeserializeOwned, Serialize};
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 
 use crate::apis::{ApiResponse, Error};
 use crate::{AuthenticatedClient, BaseClient, RequestResult};
@@ -134,10 +132,8 @@ impl InnerClient {
         );
         let mut response = builder.try_clone().unwrap().send().await?;
         if let Some(csrf_token) = response.headers().get(CSRF_TOKEN_HEADER) {
-            self.csrf_token.compare_and_swap(
-                old_csrf_token,
-                Some(Arc::new(csrf_token.to_str().unwrap().to_string())),
-            );
+            self.csrf_token
+                .store(Some(Arc::new(csrf_token.to_str().unwrap().to_string())));
             response = builder.header(CSRF_TOKEN_HEADER, csrf_token).send().await?;
         }
         if response.status() == 429 {
@@ -246,10 +242,8 @@ impl InnerCookieClient {
         );
         let mut response = builder.try_clone().unwrap().send().await?;
         if let Some(csrf_token) = response.headers().get(CSRF_TOKEN_HEADER) {
-            self.csrf_token.compare_and_swap(
-                old_csrf_token,
-                Some(Arc::new(csrf_token.to_str().unwrap().to_string())),
-            );
+            self.csrf_token
+                .swap(Some(Arc::new(csrf_token.to_str().unwrap().to_string())));
             response = builder.header(CSRF_TOKEN_HEADER, csrf_token).send().await?;
         }
         if response.status() == 429 {

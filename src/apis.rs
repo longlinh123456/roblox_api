@@ -161,7 +161,7 @@ where
             if response.next_page_cursor.is_none() {
                 break;
             };
-            cursor = response.next_page_cursor.clone();
+            cursor.clone_from(&response.next_page_cursor);
             yield response;
         }
     })

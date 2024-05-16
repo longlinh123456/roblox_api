@@ -193,19 +193,24 @@ impl CookieClient {
             jar,
         }
     }
+    #[inline]
     pub fn insert_cookie(&self, name: &str, value: &str) {
         self.jar.insert(name, value);
     }
+    #[inline]
     pub fn remove_cookie(&self, name: &str) {
         self.jar.remove(name);
     }
+    #[inline]
     #[must_use]
     pub fn get_cookie(&self, name: &str) -> Option<String> {
         self.jar.get(name)
     }
+    #[inline]
     pub fn clear_cookies(&self) {
         self.jar.clear();
     }
+    #[inline]
     pub fn set_auth_cookie(&self, cookie: &str) {
         self.jar.insert(".ROBLOSECURITY", cookie);
     }
@@ -213,6 +218,7 @@ impl CookieClient {
 
 #[async_trait]
 impl AuthenticatedClient for CookieClient {
+    #[inline]
     async fn authenticated_request<'a, T: DeserializeOwned, U: Serialize, V: Serialize>(
         &self,
         method: Method,

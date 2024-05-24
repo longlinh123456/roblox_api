@@ -79,6 +79,8 @@ impl<T: AuthenticatedClient> UsersAuthenticatedApi for T {}
 #[async_trait]
 pub trait UsersApi: BaseClient {
     /// Limit of 200 users/request
+    ///
+    /// Very large or no rate limit
     async fn get_user_info_from_id_batch<T>(
         &self,
         users: T,

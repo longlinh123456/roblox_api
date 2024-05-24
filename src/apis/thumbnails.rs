@@ -138,6 +138,9 @@ pub enum ThumbnailState {
     Completed,
     Blocked,
     Error,
+    InReview,
+    Pending,
+    TemporarilyUnavailable,
 }
 
 #[derive(Debug, Deserialize, Clone, Copy)]
@@ -172,7 +175,8 @@ struct BatchRequestArray<'a, T: Iterator<Item = BatchRequest<'a>>>(
 #[async_trait]
 pub trait ThumbnailsApi: BaseClient {
     /// Limit of 100 thumbnails/request
-    /// Rate limit: 40 requests/s, burst of 50 requests
+    ///
+    /// Rate limit: 50 requests/1.5s
     async fn get_batch_thumbnails<'a, T>(&self, requests: T) -> RequestResult<Vec<BatchThumbnail>>
     where
         T: IntoIterator<Item = BatchRequest<'a>> + Send,

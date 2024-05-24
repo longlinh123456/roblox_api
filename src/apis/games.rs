@@ -62,7 +62,7 @@ struct BatchParameters<'a> {
 
 #[async_trait]
 pub trait GamesApi: BaseClient {
-    /// Rate limit: 10 requests/3.75s, burst of 10 requests
+    /// Rate limit: 10 requests/3.5s
     fn get_public_servers<S: Into<String>>(
         &self,
         place_id: Id,
@@ -86,7 +86,7 @@ pub trait GamesApi: BaseClient {
             cursor.into(),
         )
     }
-    /// Rate limit: 10 requests/3.75s, burst of 10 requests
+    /// Rate limit: 10 requests/3.5s
     async fn get_public_servers_manual<S: AsRef<str> + Send>(
         &self,
         place_id: Id,

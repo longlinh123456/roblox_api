@@ -5,7 +5,7 @@ use chrono::{DateTime, Utc};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use super::{Empty, Id, StrPairArray};
+use super::{Empty, Id};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Shout {
@@ -116,7 +116,7 @@ pub trait GroupsApi: BaseClient {
     ) -> RequestResult<Vec<BatchGroupInfo>> {
         let query_ids = groups.into_iter().join(",");
         let response = self
-            .get::<BatchResponse, StrPairArray<1>>(
+            .get::<BatchResponse, _>(
                 add_base_url!("v2/groups"),
                 [("groupIds", query_ids.as_str())],
             )

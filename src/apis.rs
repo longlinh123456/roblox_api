@@ -1,6 +1,7 @@
 use std::mem;
 
 use async_stream::try_stream;
+use chrono::NaiveDate;
 use deranged::{OptionRangedU64, RangedU64};
 use derive_is_enum_variant::is_enum_variant;
 use futures::{future::BoxFuture, stream::BoxStream, Future};
@@ -14,8 +15,6 @@ pub mod general;
 pub mod groups;
 pub mod thumbnails;
 pub mod users;
-
-type StrPairArray<'a, const N: usize> = [(&'a str, &'a str); N];
 
 #[derive(Debug, Serialize_repr, Default, PartialEq, Eq, Clone, Copy)]
 #[repr(u8)]
@@ -44,6 +43,12 @@ fn deserialize_zeroable_id<'de, D: Deserializer<'de>>(
     deserializer: D,
 ) -> Result<OptionId, D::Error> {
     Ok(ZeroableId::deserialize(deserializer)?.into())
+}
+
+fn deserialize_date<'de, D: Deserializer<'de>>(deserializer: D) -> Result<NaiveDate, D::Error> {
+    use serde::de::Error;
+    let time = String::deserialize(deserializer)?;
+    NaiveDate::parse_from_str(&time, "%m/%d/%Y").map_err(D::Error::custom)
 }
 
 #[derive(Deserialize, Clone)]

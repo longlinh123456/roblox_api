@@ -3,6 +3,7 @@ use crate::{
     BaseClient,
 };
 use async_trait::async_trait;
+use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -60,8 +61,63 @@ struct BatchParameters<'a> {
     cursor: Option<&'a str>,
 }
 
+#[allow(clippy::struct_excessive_bools)]
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase")]
+pub struct PlaceDetails {
+    pub asset_id: Id,
+    pub name: String,
+    pub description: String,
+    #[serde(deserialize_with = "super::deserialize_date")]
+    pub created: NaiveDate,
+    #[serde(deserialize_with = "super::deserialize_date")]
+    pub updated: NaiveDate,
+    pub favorited_count: u64,
+    pub url: String,
+    pub report_abuse_absolute_url: String,
+    pub is_favorited_by_user: bool,
+    pub is_favorites_unavailable: bool,
+    pub user_can_manage_place: bool,
+    pub visited_count: u64,
+    pub max_players: u16,
+    pub builder: String,
+    pub builder_id: Id,
+    pub builder_absolute_url: String,
+    pub is_playable: bool,
+    pub reason_prohibited: String,
+    pub reason_prohibited_message: String,
+    pub is_copying_allowed: bool,
+    pub play_button_type: String,
+    pub asset_genre: String,
+    pub asset_genre_view_model: AssetGenreViewModel,
+    pub online_count: u32,
+    pub universe_id: Id,
+    pub universe_root_place_id: Id,
+    pub total_up_votes: u64,
+    pub total_down_votes: u64,
+    pub user_vote: Option<bool>,
+    pub overrides_default_avatar: bool,
+    pub use_portrait_mode: bool,
+    pub price: u32,
+    pub voice_enabled: bool,
+    pub camera_enabled: bool,
+}
+#[derive(Debug, Deserialize, Clone)]
+#[serde(rename_all = "PascalCase")]
+pub struct AssetGenreViewModel {
+    pub display_name: String,
+    pub id: u8,
+}
+
 #[async_trait]
 pub trait GamesApi: BaseClient {
+    async fn get_place_details(&self, place_id: Id) -> RequestResult<PlaceDetails> {
+        self.get::<PlaceDetails, _>(
+            "https://www.roblox.com/places/api-get-details",
+            [("assetId", place_id)],
+        )
+        .await
+    }
     /// Rate limit: 10 requests/3.5s
     fn get_public_servers<S: Into<String>>(
         &self,

@@ -4,7 +4,7 @@ use serde_iter::CloneOnce;
 
 use crate::{AuthenticatedClient, BaseClient, RequestResult};
 
-use super::Id;
+use super::{Id, JsonError};
 
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -65,12 +65,9 @@ macro_rules! add_base_url {
 
 #[async_trait]
 pub trait UsersAuthenticatedApi: AuthenticatedClient {
-    async fn get_authenticated(&self) -> RequestResult<AuthenticatedUser> {
-        self.authenticated_get::<AuthenticatedUser, ()>(
-            add_base_url!("v1/users/authenticated"),
-            None,
-        )
-        .await
+    async fn get_authenticated(&self) -> RequestResult<AuthenticatedUser, JsonError> {
+        self.authenticated_get::<_, (), _>(add_base_url!("v1/users/authenticated"), None)
+            .await
     }
 }
 
@@ -85,13 +82,13 @@ pub trait UsersApi: BaseClient {
         &self,
         users: T,
         exclude_banned_users: bool,
-    ) -> RequestResult<Vec<BatchUserInfoFromId>>
+    ) -> RequestResult<Vec<BatchUserInfoFromId>, JsonError>
     where
         T: IntoIterator<Item = Id> + Send,
         T::IntoIter: Send,
     {
         let res = self
-            .post::<BatchUserInfoFromIdResponse, BatchUserInfoFromIdRequest<T::IntoIter>>(
+            .post::<BatchUserInfoFromIdResponse, _, _>(
                 add_base_url!("v1/users"),
                 BatchUserInfoFromIdRequest {
                     user_ids: users.into_iter().into(),
@@ -106,13 +103,13 @@ pub trait UsersApi: BaseClient {
         &self,
         users: T,
         exclude_banned_users: bool,
-    ) -> RequestResult<Vec<BatchUserInfoFromUsername>>
+    ) -> RequestResult<Vec<BatchUserInfoFromUsername>, JsonError>
     where
         T: IntoIterator<Item = &'a str> + Send,
         T::IntoIter: Send,
     {
         let res = self
-            .post::<BatchUserInfoFromUsernameResponse, BatchUserInfoFromUsernameRequest<T::IntoIter>>(
+            .post::<BatchUserInfoFromUsernameResponse, _, _>(
                 add_base_url!("v1/usernames/users"),
                 BatchUserInfoFromUsernameRequest {
                     usernames: users.into_iter().into(),

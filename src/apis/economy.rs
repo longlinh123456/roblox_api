@@ -3,7 +3,7 @@ use serde::Deserialize;
 
 use crate::{AuthenticatedClient, RequestResult};
 
-use super::Id;
+use super::{Id, JsonError};
 
 #[derive(Deserialize, Debug, Clone, Copy)]
 #[serde(rename_all = "camelCase")]
@@ -22,9 +22,9 @@ macro_rules! add_base_url {
 
 #[async_trait]
 pub trait EconomyAuthenticatedApi: AuthenticatedClient {
-    async fn get_group_funds(&self, group: Id) -> RequestResult<u64> {
+    async fn get_group_funds(&self, group: Id) -> RequestResult<u64, JsonError> {
         let response = self
-            .authenticated_get::<Robux, ()>(add_base_url!("v1/groups/{}/currency", group), None)
+            .authenticated_get::<Robux, (), _>(add_base_url!("v1/groups/{}/currency", group), None)
             .await?;
         Ok(response.robux)
     }

@@ -7,7 +7,7 @@ use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use super::{Id, Page, Paginator, RequestResult};
+use super::{Id, JsonError, Page, Paginator, RequestResult, StringError};
 
 #[derive(Debug, Clone, Copy)]
 pub enum ServerType {
@@ -111,8 +111,8 @@ pub struct AssetGenreViewModel {
 
 #[async_trait]
 pub trait GamesApi: BaseClient {
-    async fn get_place_details(&self, place_id: Id) -> RequestResult<PlaceDetails> {
-        self.get::<PlaceDetails, _>(
+    async fn get_place_details(&self, place_id: Id) -> RequestResult<PlaceDetails, StringError> {
+        self.get(
             "https://www.roblox.com/places/api-get-details",
             [("assetId", place_id)],
         )
@@ -127,8 +127,8 @@ pub trait GamesApi: BaseClient {
         exclude_full_servers: bool,
         limit: RequestLimit,
         cursor: impl Into<Option<S>> + Send,
-    ) -> Paginator<'_, PublicServer> {
-        super::paginate::<_, S, _, _>(
+    ) -> Paginator<'_, PublicServer, JsonError> {
+        super::paginate::<_, S, _, _, _>(
             move |cursor| {
                 self.get_public_servers_manual::<String>(
                     place_id,
@@ -151,10 +151,10 @@ pub trait GamesApi: BaseClient {
         exclude_full_servers: bool,
         limit: RequestLimit,
         cursor: impl Into<Option<S>> + Send,
-    ) -> RequestResult<Page<PublicServer>> {
+    ) -> RequestResult<Page<PublicServer>, JsonError> {
         let cursor = cursor.into();
         let a = cursor.as_ref().map(AsRef::as_ref);
-        self.get::<Page<PublicServer>, BatchParameters>(
+        self.get(
             add_base_url!("v1/games/{}/servers/{}", place_id, server_type as u8),
             BatchParameters {
                 sort_order,

@@ -11,8 +11,8 @@ use reqwest::{
 use serde::{de::DeserializeOwned, Serialize};
 use std::sync::Arc;
 
-use crate::apis::{ApiResponse, Error};
-use crate::{AuthenticatedClient, BaseClient, RequestResult};
+use crate::apis::{Error, RequestResult, RobloxError};
+use crate::{AuthenticatedClient, BaseClient};
 
 pub use reqwest::ClientBuilder;
 pub use reqwest::Proxy;
@@ -89,13 +89,13 @@ impl Client {
         }
         builder
     }
-    pub async fn request<'a, T: DeserializeOwned, U: Serialize, V: Serialize>(
+    pub async fn request<'a, T: DeserializeOwned, U: Serialize, V: Serialize, E: RobloxError>(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
         query: impl Into<Option<U>> + Send,
         payload: impl Into<Option<V>> + Send,
-    ) -> RequestResult<T> {
+    ) -> RequestResult<T, E> {
         let old_csrf_token = self.csrf_token.load();
         let builder = self.build_request(method, url, query, payload, old_csrf_token.as_deref());
         let mut response = builder.try_clone().unwrap().send().await?;
@@ -106,7 +106,9 @@ impl Client {
         if response.status() == 429 {
             return Err(Error::RateLimit);
         };
-        Ok(response.json::<ApiResponse<T>>().await?.0?)
+        let res = response.text().await?;
+        serde_json::from_str::<T>(&res)
+            .map_or_else(|_| Err(E::parse(res).into()), |value| Ok(value))
     }
     #[must_use]
     pub fn new(builder: ReqwestClientBuilder) -> Self {
@@ -119,13 +121,13 @@ impl Client {
 
 #[async_trait]
 impl BaseClient for Client {
-    async fn request<'a, T: DeserializeOwned, U: Serialize, V: Serialize>(
+    async fn request<'a, T: DeserializeOwned, U: Serialize, V: Serialize, E: RobloxError>(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
         query: impl Into<Option<U>> + Send,
         payload: impl Into<Option<V>> + Send,
-    ) -> RequestResult<T> {
+    ) -> RequestResult<T, E> {
         self.request(method, url, query, payload).await
     }
 }
@@ -164,13 +166,13 @@ impl CookieClient {
         }
         builder
     }
-    pub async fn request<'a, T: DeserializeOwned, U: Serialize, V: Serialize>(
+    pub async fn request<'a, T: DeserializeOwned, U: Serialize, V: Serialize, E: RobloxError>(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
         query: impl Into<Option<U>> + Send,
         payload: impl Into<Option<V>> + Send,
-    ) -> RequestResult<T> {
+    ) -> RequestResult<T, E> {
         let old_csrf_token = self.csrf_token.load();
         let builder = self.build_request(method, url, query, payload, old_csrf_token.as_deref());
         let mut response = builder.try_clone().unwrap().send().await?;
@@ -181,7 +183,9 @@ impl CookieClient {
         if response.status() == 429 {
             return Err(Error::RateLimit);
         };
-        Ok(response.json::<ApiResponse<T>>().await?.0?)
+        let res = response.text().await?;
+        serde_json::from_str::<T>(&res)
+            .map_or_else(|_| Err(E::parse(res).into()), |value| Ok(value))
     }
     #[must_use]
     pub fn new(builder: ReqwestClientBuilder, auth_cookie: &str) -> Self {
@@ -219,13 +223,19 @@ impl CookieClient {
 #[async_trait]
 impl AuthenticatedClient for CookieClient {
     #[inline]
-    async fn authenticated_request<'a, T: DeserializeOwned, U: Serialize, V: Serialize>(
+    async fn authenticated_request<
+        'a,
+        T: DeserializeOwned,
+        U: Serialize,
+        V: Serialize,
+        E: RobloxError,
+    >(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
         query: impl Into<Option<U>> + Send,
         payload: impl Into<Option<V>> + Send,
-    ) -> RequestResult<T> {
+    ) -> RequestResult<T, E> {
         self.request(method, url, query, payload).await
     }
 }

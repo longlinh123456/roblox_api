@@ -5,7 +5,7 @@ use chrono::{DateTime, Utc};
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
-use super::{Empty, Id};
+use super::{Empty, Id, JsonError};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Shout {
@@ -113,22 +113,22 @@ pub trait GroupsApi: BaseClient {
     async fn get_group_info_batch(
         &self,
         groups: impl IntoIterator<Item = Id> + Send,
-    ) -> RequestResult<Vec<BatchGroupInfo>> {
+    ) -> RequestResult<Vec<BatchGroupInfo>, JsonError> {
         let query_ids = groups.into_iter().join(",");
         let response = self
-            .get::<BatchResponse, _>(
+            .get::<BatchResponse, _, _>(
                 add_base_url!("v2/groups"),
                 [("groupIds", query_ids.as_str())],
             )
             .await?;
         Ok(response.data)
     }
-    async fn get_group_info(&self, group: Id) -> RequestResult<SingleGroupInfo> {
-        self.get::<SingleGroupInfo, ()>(add_base_url!("v1/groups/{}", group), None)
+    async fn get_group_info(&self, group: Id) -> RequestResult<SingleGroupInfo, JsonError> {
+        self.get::<_, (), _>(add_base_url!("v1/groups/{}", group), None)
             .await
     }
-    async fn get_metadata(&self) -> RequestResult<GroupMetadata> {
-        self.get::<GroupMetadata, ()>(add_base_url!("v1/groups/metadata"), None)
+    async fn get_metadata(&self) -> RequestResult<GroupMetadata, JsonError> {
+        self.get::<_, (), _>(add_base_url!("v1/groups/metadata"), None)
             .await
     }
 }
@@ -140,22 +140,23 @@ pub trait GroupsAuthenticatedApi: AuthenticatedClient {
         &self,
         group: Id,
         solved_captcha: impl Into<Option<SolvedCaptcha<'a>>> + Send,
-    ) -> RequestResult<Empty> {
-        self.authenticated_post::<Empty, SolvedCaptcha<'a>>(
-            add_base_url!("v1/groups/{}/users", group),
-            solved_captcha,
-        )
-        .await
+    ) -> RequestResult<Empty, JsonError> {
+        self.authenticated_post(add_base_url!("v1/groups/{}/users", group), solved_captcha)
+            .await
     }
-    async fn claim_group(&self, group: Id) -> RequestResult<Empty> {
-        self.authenticated_post::<Empty, ()>(
+    async fn claim_group(&self, group: Id) -> RequestResult<Empty, JsonError> {
+        self.authenticated_post::<_, (), _>(
             add_base_url!("v1/groups/{}/claim-ownership", group),
             None,
         )
         .await
     }
-    async fn remove_user_from_group(&self, group: Id, target: Id) -> RequestResult<Empty> {
-        self.authenticated_delete::<Empty, ()>(
+    async fn remove_user_from_group(
+        &self,
+        group: Id,
+        target: Id,
+    ) -> RequestResult<Empty, JsonError> {
+        self.authenticated_delete::<_, (), _>(
             add_base_url!("v1/groups/{}/users/{}", group, target),
             None,
         )

@@ -6,7 +6,7 @@ use serde_repr::Serialize_repr;
 
 use crate::BaseClient;
 
-use super::{OptionId, RequestResult};
+use super::{JsonError, OptionId, RequestResult};
 
 macro_rules! add_base_url {
     ($api_route: literal) => {
@@ -177,13 +177,16 @@ pub trait ThumbnailsApi: BaseClient {
     /// Limit of 100 thumbnails/request
     ///
     /// Rate limit: 50 requests/1.5s
-    async fn get_batch_thumbnails<'a, T>(&self, requests: T) -> RequestResult<Vec<BatchThumbnail>>
+    async fn get_batch_thumbnails<'a, T>(
+        &self,
+        requests: T,
+    ) -> RequestResult<Vec<BatchThumbnail>, JsonError>
     where
         T: IntoIterator<Item = BatchRequest<'a>> + Send,
         T::IntoIter: Send,
     {
         let response = self
-            .post::<BatchResponse, BatchRequestArray<T::IntoIter>>(
+            .post::<BatchResponse, _, _>(
                 add_base_url!("v1/batch"),
                 BatchRequestArray(requests.into_iter().into()),
             )

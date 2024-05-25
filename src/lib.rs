@@ -5,80 +5,81 @@
     clippy::module_name_repetitions
 )]
 
-use apis::RequestResult;
+use apis::{RequestResult, RobloxError};
 use async_trait::async_trait;
 use reqwest::{IntoUrl, Method};
 use serde::{de::DeserializeOwned, Serialize};
 
 pub mod apis;
 pub mod clients;
+pub(crate) mod private;
 pub(crate) mod utils;
 
 #[async_trait]
 pub trait BaseClient: Sync {
-    async fn request<'a, T: DeserializeOwned, U: Serialize, V: Serialize>(
+    async fn request<'a, T: DeserializeOwned, U: Serialize, V: Serialize, E: RobloxError>(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
         query: impl Into<Option<U>> + Send,
         payload: impl Into<Option<V>> + Send,
-    ) -> RequestResult<T>;
+    ) -> RequestResult<T, E>;
     #[inline]
-    async fn get<'a, T: DeserializeOwned, U: Serialize>(
+    async fn get<'a, T: DeserializeOwned, U: Serialize, E: RobloxError>(
         &self,
         url: impl IntoUrl + Send,
         query: impl Into<Option<U>> + Send,
-    ) -> RequestResult<T> {
-        self.request::<T, U, ()>(Method::GET, url, query, None)
+    ) -> RequestResult<T, E> {
+        self.request::<T, U, (), E>(Method::GET, url, query, None)
             .await
     }
     #[inline]
-    async fn post<T: DeserializeOwned, U: Serialize>(
+    async fn post<T: DeserializeOwned, U: Serialize, E: RobloxError>(
         &self,
         url: impl IntoUrl + Send,
         payload: impl Into<Option<U>> + Send,
-    ) -> RequestResult<T> {
-        self.request::<T, (), U>(Method::POST, url, None, payload)
+    ) -> RequestResult<T, E> {
+        self.request::<T, (), U, E>(Method::POST, url, None, payload)
             .await
     }
     #[inline]
-    async fn put<T: DeserializeOwned, U: Serialize>(
+    async fn put<T: DeserializeOwned, U: Serialize, E: RobloxError>(
         &self,
         url: impl IntoUrl + Send,
         payload: impl Into<Option<U>> + Send,
-    ) -> RequestResult<T> {
-        self.request::<T, (), U>(Method::PUT, url, None, payload)
+    ) -> RequestResult<T, E> {
+        self.request::<T, (), U, E>(Method::PUT, url, None, payload)
             .await
     }
     #[inline]
-    async fn patch<T: DeserializeOwned, U: Serialize>(
+    async fn patch<T: DeserializeOwned, U: Serialize, E: RobloxError>(
         &self,
         url: impl IntoUrl + Send,
         payload: impl Into<Option<U>> + Send,
-    ) -> RequestResult<T> {
-        self.request::<T, (), U>(Method::PATCH, url, None, payload)
+    ) -> RequestResult<T, E> {
+        self.request::<T, (), U, E>(Method::PATCH, url, None, payload)
             .await
     }
     #[inline]
-    async fn delete<T: DeserializeOwned, U: Serialize>(
+    async fn delete<T: DeserializeOwned, U: Serialize, E: RobloxError>(
         &self,
         url: impl IntoUrl + Send,
         payload: impl Into<Option<U>> + Send,
-    ) -> RequestResult<T> {
-        self.request::<T, (), U>(Method::DELETE, url, None, payload)
+    ) -> RequestResult<T, E> {
+        self.request::<T, (), U, E>(Method::DELETE, url, None, payload)
             .await
     }
 }
 #[async_trait]
 impl<C: AuthenticatedClient> BaseClient for C {
     #[inline]
-    async fn request<'a, T: DeserializeOwned, U: Serialize, V: Serialize>(
+    async fn request<'a, T: DeserializeOwned, U: Serialize, V: Serialize, E: RobloxError>(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
         query: impl Into<Option<U>> + Send,
         payload: impl Into<Option<V>> + Send,
-    ) -> RequestResult<T> {
+    ) -> RequestResult<T, E> {
         self.authenticated_request(method, url, query, payload)
             .await
     }
@@ -86,56 +87,62 @@ impl<C: AuthenticatedClient> BaseClient for C {
 
 #[async_trait]
 pub trait AuthenticatedClient: Sync {
-    async fn authenticated_request<'a, T: DeserializeOwned, U: Serialize, V: Serialize>(
+    async fn authenticated_request<
+        'a,
+        T: DeserializeOwned,
+        U: Serialize,
+        V: Serialize,
+        E: RobloxError,
+    >(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
         query: impl Into<Option<U>> + Send,
         payload: impl Into<Option<V>> + Send,
-    ) -> RequestResult<T>;
+    ) -> RequestResult<T, E>;
     #[inline]
-    async fn authenticated_get<'a, T: DeserializeOwned, U: Serialize>(
+    async fn authenticated_get<'a, T: DeserializeOwned, U: Serialize, E: RobloxError>(
         &self,
         url: impl IntoUrl + Send,
         query: impl Into<Option<U>> + Send,
-    ) -> RequestResult<T> {
-        self.authenticated_request::<T, U, ()>(Method::GET, url, query, None)
+    ) -> RequestResult<T, E> {
+        self.authenticated_request::<T, U, (), E>(Method::GET, url, query, None)
             .await
     }
     #[inline]
-    async fn authenticated_post<T: DeserializeOwned, U: Serialize>(
+    async fn authenticated_post<T: DeserializeOwned, U: Serialize, E: RobloxError>(
         &self,
         url: impl IntoUrl + Send,
         payload: impl Into<Option<U>> + Send,
-    ) -> RequestResult<T> {
-        self.authenticated_request::<T, (), U>(Method::POST, url, None, payload)
+    ) -> RequestResult<T, E> {
+        self.authenticated_request::<T, (), U, E>(Method::POST, url, None, payload)
             .await
     }
     #[inline]
-    async fn authenticated_put<T: DeserializeOwned, U: Serialize>(
+    async fn authenticated_put<T: DeserializeOwned, U: Serialize, E: RobloxError>(
         &self,
         url: impl IntoUrl + Send,
         payload: impl Into<Option<U>> + Send,
-    ) -> RequestResult<T> {
-        self.authenticated_request::<T, (), U>(Method::PUT, url, None, payload)
+    ) -> RequestResult<T, E> {
+        self.authenticated_request::<T, (), U, E>(Method::PUT, url, None, payload)
             .await
     }
     #[inline]
-    async fn authenticated_patch<T: DeserializeOwned, U: Serialize>(
+    async fn authenticated_patch<T: DeserializeOwned, U: Serialize, E: RobloxError>(
         &self,
         url: impl IntoUrl + Send,
         payload: impl Into<Option<U>> + Send,
-    ) -> RequestResult<T> {
-        self.authenticated_request::<T, (), U>(Method::PATCH, url, None, payload)
+    ) -> RequestResult<T, E> {
+        self.authenticated_request::<T, (), U, E>(Method::PATCH, url, None, payload)
             .await
     }
     #[inline]
-    async fn authenticated_delete<T: DeserializeOwned, U: Serialize>(
+    async fn authenticated_delete<T: DeserializeOwned, U: Serialize, E: RobloxError>(
         &self,
         url: impl IntoUrl + Send,
         payload: impl Into<Option<U>> + Send,
-    ) -> RequestResult<T> {
-        self.authenticated_request::<T, (), U>(Method::DELETE, url, None, payload)
+    ) -> RequestResult<T, E> {
+        self.authenticated_request::<T, (), U, E>(Method::DELETE, url, None, payload)
             .await
     }
 }

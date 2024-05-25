@@ -9,6 +9,8 @@ use serde::{Deserialize, Deserializer};
 use serde_repr::Serialize_repr;
 use thiserror::Error;
 
+use crate::private::RobloxErrorSealed;
+
 pub mod economy;
 pub mod games;
 pub mod general;
@@ -51,77 +53,96 @@ fn deserialize_date<'de, D: Deserializer<'de>>(deserializer: D) -> Result<NaiveD
     NaiveDate::parse_from_str(&time, "%m/%d/%Y").map_err(D::Error::custom)
 }
 
-#[derive(Deserialize, Clone)]
-#[serde(untagged)]
-enum ResultDef<T, E> {
-    Ok(T),
-    Err(E),
-}
-
-#[derive(Deserialize, Clone)]
-#[serde(from = "ResultDef<T, E>")]
-pub(crate) struct UntaggedResult<T, E>(pub(crate) Result<T, E>);
-impl<T, E> From<ResultDef<T, E>> for UntaggedResult<T, E> {
-    fn from(result: ResultDef<T, E>) -> Self {
-        match result {
-            ResultDef::Ok(value) => Self(Ok(value)),
-            ResultDef::Err(value) => Self(Err(value)),
-        }
-    }
-}
-
-pub type RequestResult<T> = Result<T, Error>;
-pub(crate) type ApiResponse<T> = UntaggedResult<T, ApiError>;
+pub type RequestResult<T, E> = Result<T, Error<E>>;
 
 #[derive(Deserialize, Debug, Clone, Copy)]
 #[serde(deny_unknown_fields)]
 pub struct Empty {}
 
+pub trait RobloxError: RobloxErrorSealed + std::error::Error + Send {
+    fn parse(res: String) -> Self;
+}
+
+#[derive(Debug, Error)]
+#[error("string api error: {message}")]
+pub struct StringError {
+    message: String,
+}
+impl RobloxErrorSealed for StringError {}
+impl RobloxError for StringError {
+    fn parse(res: String) -> Self {
+        Self { message: res }
+    }
+}
+
 #[derive(Debug, Error, is_enum_variant)]
 #[non_exhaustive]
-pub enum Error {
-    #[error("roblox api error: {0}")]
-    Api(#[from] ApiError),
+pub enum Error<T: RobloxError> {
+    #[error(transparent)]
+    Api(#[from] T),
 
     #[error("request error: {0}")]
     Request(#[from] reqwest::Error),
 
-    #[error("roblox rate limit")]
+    #[error("rate limited")]
     RateLimit,
 }
 
 #[derive(Debug, Deserialize, Clone, Default)]
-struct ApiErrors {
-    errors: [InnerApiError; 1],
+struct JsonErrors {
+    errors: [InnerJsonError; 1],
 }
 
 #[derive(Debug, Deserialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
-struct InnerApiError {
+struct InnerJsonError {
     pub code: i8,
     pub message: String,
     pub user_facing_message: Option<String>,
     pub field: Option<String>,
 }
 
-#[derive(Debug, Deserialize, Error, Clone, Default)]
-#[serde(rename_all = "camelCase", from = "ApiErrors")]
-#[error("{code}: {}", Self::display_error_message(self))]
-pub struct ApiError {
-    pub code: i8,
-    pub message: String,
-    pub user_facing_message: Option<String>,
-    pub field: Option<String>,
+#[derive(Debug, Deserialize, Error, Clone)]
+#[serde(rename_all = "camelCase", from = "JsonErrors")]
+#[error("{}", self.display_error_message())]
+pub enum JsonError {
+    Valid {
+        code: i8,
+        message: String,
+        user_facing_message: Option<String>,
+        field: Option<String>,
+    },
+    Malformed(String),
 }
-impl ApiError {
-    #[must_use]
-    pub fn display_error_message(&self) -> &String {
-        self.user_facing_message.as_ref().unwrap_or(&self.message)
+impl RobloxErrorSealed for JsonError {}
+impl RobloxError for JsonError {
+    fn parse(res: String) -> Self {
+        serde_json::from_str::<Self>(&res).map_or(Self::Malformed(res), |value| value)
     }
 }
-impl From<ApiErrors> for ApiError {
-    fn from(mut value: ApiErrors) -> Self {
-        Self {
+impl JsonError {
+    #[must_use]
+    pub fn display_error_message(&self) -> String {
+        match self {
+            Self::Valid {
+                user_facing_message,
+                message,
+                ..
+            } => {
+                format!(
+                    "json error: {}",
+                    user_facing_message.as_ref().unwrap_or(message)
+                )
+            }
+            Self::Malformed(value) => {
+                format!("malformed response: {value}")
+            }
+        }
+    }
+}
+impl From<JsonErrors> for JsonError {
+    fn from(mut value: JsonErrors) -> Self {
+        Self::Valid {
             code: value.errors[0].code,
             message: mem::take(&mut value.errors[0].message),
             user_facing_message: mem::take(&mut value.errors[0].user_facing_message),
@@ -148,16 +169,20 @@ pub struct Page<T> {
     pub data: Vec<T>,
 }
 
-pub type Paginator<'a, T> = BoxStream<'a, RequestResult<Page<T>>>;
+pub type Paginator<'a, T, E> = BoxStream<'a, RequestResult<Page<T>, E>>;
 
-pub type RequestFuture<'a, T> = BoxFuture<'a, RequestResult<Page<T>>>;
+pub type RequestFuture<'a, T, E> = BoxFuture<'a, RequestResult<Page<T>, E>>;
 
-fn paginate<'a, T, S, Fut, R>(mut request: R, cursor: impl Into<Option<S>>) -> Paginator<'a, T>
+fn paginate<'a, T, S, Fut, R, E>(
+    mut request: R,
+    cursor: impl Into<Option<S>>,
+) -> Paginator<'a, T, E>
 where
     T: Unpin + Send + 'a,
-    Fut: Future<Output = RequestResult<Page<T>>> + Send,
+    Fut: Future<Output = RequestResult<Page<T>, E>> + Send,
     R: 'a + FnMut(Option<String>) -> Fut + Send,
     S: Into<String>,
+    E: 'a + RobloxError,
 {
     let mut cursor: Option<String> = cursor.into().map(Into::into);
     Box::pin(try_stream! {

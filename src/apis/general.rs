@@ -3,7 +3,7 @@ use serde::Deserialize;
 
 use crate::BaseClient;
 
-use super::{Id, RequestResult};
+use super::{Id, JsonError, OptionId, RequestResult};
 
 macro_rules! add_base_url {
     ($api_route: literal) => {
@@ -17,14 +17,14 @@ macro_rules! add_base_url {
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 struct PlaceResponse {
-    universe_id: Id,
+    universe_id: OptionId,
 }
 
 #[async_trait]
 pub trait GeneralApi: BaseClient {
-    async fn get_universe_from_place(&self, place: Id) -> RequestResult<Id> {
+    async fn get_universe_from_place(&self, place: Id) -> RequestResult<OptionId, JsonError> {
         let res = self
-            .get::<PlaceResponse, ()>(
+            .get::<PlaceResponse, (), _>(
                 add_base_url!("universes/v1/places/{}/universe", place),
                 None,
             )

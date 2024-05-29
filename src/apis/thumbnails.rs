@@ -38,6 +38,7 @@ pub struct BatchRequest<'a> {
 #[derive(Debug, Serialize, Default, PartialEq, Eq, Clone, Copy, is_enum_variant)]
 pub enum ThumbnailFormat {
     #[default]
+    Webp,
     Png,
     Jpeg,
 }

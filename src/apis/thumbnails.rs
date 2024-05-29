@@ -1,7 +1,6 @@
 use async_trait::async_trait;
 use derive_is_enum_variant::is_enum_variant;
 use serde::{Deserialize, Serialize};
-use serde_iter::CloneOnce;
 use serde_repr::Serialize_repr;
 
 use crate::BaseClient;
@@ -168,8 +167,8 @@ struct BatchResponse {
 }
 
 #[derive(Serialize)]
-struct BatchRequestArray<'a, T: Iterator<Item = BatchRequest<'a>>>(
-    #[serde(with = "serde_iter::seq")] CloneOnce<BatchRequest<'a>, T>,
+struct BatchRequestArray<'a, T: Iterator<Item = BatchRequest<'a>> + Clone>(
+    #[serde(with = "serde_iter::seq")] T,
 );
 
 #[async_trait]
@@ -183,12 +182,12 @@ pub trait ThumbnailsApi: BaseClient {
     ) -> RequestResult<Vec<BatchThumbnail>, JsonError>
     where
         T: IntoIterator<Item = BatchRequest<'a>> + Send,
-        T::IntoIter: Send,
+        T::IntoIter: Send + Clone,
     {
         let response = self
             .post::<BatchResponse, _, _>(
                 add_base_url!("v1/batch"),
-                BatchRequestArray(requests.into_iter().into()),
+                BatchRequestArray(requests.into_iter()),
             )
             .await?;
         Ok(response.data)

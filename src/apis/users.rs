@@ -1,6 +1,5 @@
 use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
-use serde_iter::CloneOnce;
 
 use crate::{AuthenticatedClient, BaseClient, RequestResult};
 
@@ -15,16 +14,16 @@ pub struct AuthenticatedUser {
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct BatchUserInfoFromIdRequest<T: Iterator<Item = Id>> {
+struct BatchUserInfoFromIdRequest<T: Iterator<Item = Id> + Clone> {
     #[serde(with = "serde_iter::seq")]
-    user_ids: CloneOnce<Id, T>,
+    user_ids: T,
     exclude_banned_users: bool,
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-struct BatchUserInfoFromUsernameRequest<'a, T: Iterator<Item = &'a str>> {
+struct BatchUserInfoFromUsernameRequest<'a, T: Iterator<Item = &'a str> + Clone> {
     #[serde(with = "serde_iter::seq")]
-    usernames: CloneOnce<&'a str, T>,
+    usernames: T,
     exclude_banned_users: bool,
 }
 #[derive(Deserialize, Debug, Clone)]
@@ -85,13 +84,13 @@ pub trait UsersApi: BaseClient {
     ) -> RequestResult<Vec<BatchUserInfoFromId>, JsonError>
     where
         T: IntoIterator<Item = Id> + Send,
-        T::IntoIter: Send,
+        T::IntoIter: Send + Clone,
     {
         let res = self
             .post::<BatchUserInfoFromIdResponse, _, _>(
                 add_base_url!("v1/users"),
                 BatchUserInfoFromIdRequest {
-                    user_ids: users.into_iter().into(),
+                    user_ids: users.into_iter(),
                     exclude_banned_users,
                 },
             )
@@ -106,13 +105,13 @@ pub trait UsersApi: BaseClient {
     ) -> RequestResult<Vec<BatchUserInfoFromUsername>, JsonError>
     where
         T: IntoIterator<Item = &'a str> + Send,
-        T::IntoIter: Send,
+        T::IntoIter: Send + Clone,
     {
         let res = self
             .post::<BatchUserInfoFromUsernameResponse, _, _>(
                 add_base_url!("v1/usernames/users"),
                 BatchUserInfoFromUsernameRequest {
-                    usernames: users.into_iter().into(),
+                    usernames: users.into_iter(),
                     exclude_banned_users,
                 },
             )

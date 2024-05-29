@@ -111,6 +111,7 @@ pub struct AssetGenreViewModel {
 
 #[async_trait]
 pub trait GamesApi: BaseClient {
+    /// Very large or no rate limit
     async fn get_place_details(&self, place_id: Id) -> RequestResult<PlaceDetails, StringError> {
         self.get(
             "https://www.roblox.com/places/api-get-details",

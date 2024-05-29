@@ -115,23 +115,23 @@ pub trait GamesApi: BaseClient {
     async fn get_place_details(&self, place_id: Id) -> RequestResult<PlaceDetails, StringError> {
         self.get(
             "https://www.roblox.com/places/api-get-details",
-            [("assetId", place_id)],
+            Some([("assetId", place_id)]),
         )
         .await
     }
     /// Rate limit: 10 requests/3.5s
-    fn get_public_servers<S: Into<String>>(
+    fn get_public_servers(
         &self,
         place_id: Id,
         server_type: ServerType,
         sort_order: SortOrder,
         exclude_full_servers: bool,
         limit: RequestLimit,
-        cursor: impl Into<Option<S>> + Send,
+        cursor: Option<impl Into<String>>,
     ) -> Paginator<'_, PublicServer, JsonError> {
-        super::paginate::<_, S, _, _, _>(
+        super::paginate(
             move |cursor| {
-                self.get_public_servers_manual::<String>(
+                self.get_public_servers_manual(
                     place_id,
                     server_type,
                     sort_order,
@@ -140,29 +140,28 @@ pub trait GamesApi: BaseClient {
                     cursor,
                 )
             },
-            cursor.into(),
+            cursor,
         )
     }
     /// Rate limit: 10 requests/3.5s
-    async fn get_public_servers_manual<S: AsRef<str> + Send>(
+    async fn get_public_servers_manual(
         &self,
         place_id: Id,
         server_type: ServerType,
         sort_order: SortOrder,
         exclude_full_servers: bool,
         limit: RequestLimit,
-        cursor: impl Into<Option<S>> + Send,
+        cursor: Option<impl AsRef<str> + Send>,
     ) -> RequestResult<Page<PublicServer>, JsonError> {
-        let cursor = cursor.into();
         let a = cursor.as_ref().map(AsRef::as_ref);
         self.get(
             add_base_url!("v1/games/{}/servers/{}", place_id, server_type as u8),
-            BatchParameters {
+            Some(BatchParameters {
                 sort_order,
                 exclude_full_servers,
                 limit,
                 cursor: a,
-            },
+            }),
         )
         .await
     }

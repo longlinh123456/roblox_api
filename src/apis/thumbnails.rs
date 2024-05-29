@@ -185,9 +185,9 @@ pub trait ThumbnailsApi: BaseClient {
         T::IntoIter: Send + Clone,
     {
         let response = self
-            .post::<BatchResponse, _, _>(
+            .post::<BatchResponse, _>(
                 add_base_url!("v1/batch"),
-                BatchRequestArray(requests.into_iter()),
+                Some(BatchRequestArray(requests.into_iter())),
             )
             .await?;
         Ok(response.data)

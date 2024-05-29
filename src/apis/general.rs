@@ -24,9 +24,9 @@ struct PlaceResponse {
 pub trait GeneralApi: BaseClient {
     async fn get_universe_from_place(&self, place: Id) -> RequestResult<OptionId, JsonError> {
         let res = self
-            .get::<PlaceResponse, (), _>(
+            .get::<PlaceResponse, _>(
                 add_base_url!("universes/v1/places/{}/universe", place),
-                None,
+                None::<()>,
             )
             .await?;
         Ok(res.universe_id)

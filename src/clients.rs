@@ -62,39 +62,39 @@ pub struct Client {
     csrf_token: Arc<ArcSwapOption<HeaderValue>>,
 }
 impl Client {
-    fn build_request<'a, U: Serialize, V: Serialize>(
+    fn build_request(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
-        query: impl Into<Option<U>> + Send,
-        payload: impl Into<Option<V>> + Send,
-        csrf_token: impl Into<Option<&'a HeaderValue>>,
+        query: Option<impl Serialize>,
+        payload: Option<impl Serialize>,
+        csrf_token: Option<&HeaderValue>,
     ) -> RequestBuilder {
         let is_get = matches!(method, Method::GET);
         let mut builder = self.client.request(method, url);
-        if let Some(query) = query.into() {
+        if let Some(query) = query {
             builder = builder.query(&query);
         };
-        builder = match payload.into() {
+        builder = match payload {
             Some(payload) => builder.json(&payload),
             None => builder
                 .body("")
                 .header("Content-Length", 0)
                 .header("Content-Type", "application/json"),
         };
-        if let Some(csrf_token) = csrf_token.into() {
+        if let Some(csrf_token) = csrf_token {
             if !is_get {
                 builder = builder.header(CSRF_TOKEN_HEADER, csrf_token);
             }
         }
         builder
     }
-    pub async fn request<'a, T: DeserializeOwned, U: Serialize, V: Serialize, E: RobloxError>(
+    pub async fn request<T: DeserializeOwned, E: RobloxError>(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
-        query: impl Into<Option<U>> + Send,
-        payload: impl Into<Option<V>> + Send,
+        query: Option<impl Serialize + Send>,
+        payload: Option<impl Serialize + Send>,
     ) -> RequestResult<T, E> {
         let old_csrf_token = self.csrf_token.load();
         let builder = self.build_request(method, url, query, payload, old_csrf_token.as_deref());
@@ -121,12 +121,12 @@ impl Client {
 
 #[async_trait]
 impl BaseClient for Client {
-    async fn request<'a, T: DeserializeOwned, U: Serialize, V: Serialize, E: RobloxError>(
+    async fn request<T: DeserializeOwned, E: RobloxError>(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
-        query: impl Into<Option<U>> + Send,
-        payload: impl Into<Option<V>> + Send,
+        query: Option<impl Serialize + Send>,
+        payload: Option<impl Serialize + Send>,
     ) -> RequestResult<T, E> {
         self.request(method, url, query, payload).await
     }
@@ -139,39 +139,39 @@ pub struct CookieClient {
     jar: Arc<StaticSharedJar>,
 }
 impl CookieClient {
-    fn build_request<'a, U: Serialize, V: Serialize>(
+    fn build_request(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
-        query: impl Into<Option<U>> + Send,
-        payload: impl Into<Option<V>> + Send,
-        csrf_token: impl Into<Option<&'a HeaderValue>>,
+        query: Option<impl Serialize>,
+        payload: Option<impl Serialize>,
+        csrf_token: Option<&HeaderValue>,
     ) -> RequestBuilder {
         let is_get = matches!(method, Method::GET);
         let mut builder = self.client.request(method, url);
-        if let Some(query) = query.into() {
+        if let Some(query) = query {
             builder = builder.query(&query);
         };
-        builder = match payload.into() {
+        builder = match payload {
             Some(payload) => builder.json(&payload),
             None => builder
                 .body("")
                 .header("Content-Length", 0)
                 .header("Content-Type", "application/json"),
         };
-        if let Some(csrf_token) = csrf_token.into() {
+        if let Some(csrf_token) = csrf_token {
             if !is_get {
                 builder = builder.header(CSRF_TOKEN_HEADER, csrf_token);
             }
         }
         builder
     }
-    pub async fn request<'a, T: DeserializeOwned, U: Serialize, V: Serialize, E: RobloxError>(
+    pub async fn request<T: DeserializeOwned, E: RobloxError>(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
-        query: impl Into<Option<U>> + Send,
-        payload: impl Into<Option<V>> + Send,
+        query: Option<impl Serialize + Send>,
+        payload: Option<impl Serialize + Send>,
     ) -> RequestResult<T, E> {
         let old_csrf_token = self.csrf_token.load();
         let builder = self.build_request(method, url, query, payload, old_csrf_token.as_deref());
@@ -223,18 +223,12 @@ impl CookieClient {
 #[async_trait]
 impl AuthenticatedClient for CookieClient {
     #[inline]
-    async fn authenticated_request<
-        'a,
-        T: DeserializeOwned,
-        U: Serialize,
-        V: Serialize,
-        E: RobloxError,
-    >(
+    async fn authenticated_request<T: DeserializeOwned, E: RobloxError>(
         &self,
         method: Method,
         url: impl IntoUrl + Send,
-        query: impl Into<Option<U>> + Send,
-        payload: impl Into<Option<V>> + Send,
+        query: Option<impl Serialize + Send>,
+        payload: Option<impl Serialize + Send>,
     ) -> RequestResult<T, E> {
         self.request(method, url, query, payload).await
     }

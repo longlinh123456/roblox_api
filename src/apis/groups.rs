@@ -116,19 +116,19 @@ pub trait GroupsApi: BaseClient {
     ) -> RequestResult<Vec<BatchGroupInfo>, JsonError> {
         let query_ids = groups.into_iter().join(",");
         let response = self
-            .get::<BatchResponse, _, _>(
+            .get::<BatchResponse, _>(
                 add_base_url!("v2/groups"),
-                [("groupIds", query_ids.as_str())],
+                Some([("groupIds", query_ids.as_str())]),
             )
             .await?;
         Ok(response.data)
     }
     async fn get_group_info(&self, group: Id) -> RequestResult<SingleGroupInfo, JsonError> {
-        self.get::<_, (), _>(add_base_url!("v1/groups/{}", group), None)
+        self.get(add_base_url!("v1/groups/{}", group), None::<()>)
             .await
     }
     async fn get_metadata(&self) -> RequestResult<GroupMetadata, JsonError> {
-        self.get::<_, (), _>(add_base_url!("v1/groups/metadata"), None)
+        self.get(add_base_url!("v1/groups/metadata"), None::<()>)
             .await
     }
 }
@@ -139,15 +139,15 @@ pub trait GroupsAuthenticatedApi: AuthenticatedClient {
     async fn join_group<'a>(
         &self,
         group: Id,
-        solved_captcha: impl Into<Option<SolvedCaptcha<'a>>> + Send,
+        solved_captcha: Option<SolvedCaptcha<'a>>,
     ) -> RequestResult<Empty, JsonError> {
         self.authenticated_post(add_base_url!("v1/groups/{}/users", group), solved_captcha)
             .await
     }
     async fn claim_group(&self, group: Id) -> RequestResult<Empty, JsonError> {
-        self.authenticated_post::<_, (), _>(
+        self.authenticated_post(
             add_base_url!("v1/groups/{}/claim-ownership", group),
-            None,
+            None::<()>,
         )
         .await
     }
@@ -156,9 +156,9 @@ pub trait GroupsAuthenticatedApi: AuthenticatedClient {
         group: Id,
         target: Id,
     ) -> RequestResult<Empty, JsonError> {
-        self.authenticated_delete::<_, (), _>(
+        self.authenticated_delete(
             add_base_url!("v1/groups/{}/users/{}", group, target),
-            None,
+            None::<()>,
         )
         .await
     }

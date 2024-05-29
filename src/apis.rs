@@ -173,18 +173,17 @@ pub type Paginator<'a, T, E> = BoxStream<'a, RequestResult<Page<T>, E>>;
 
 pub type RequestFuture<'a, T, E> = BoxFuture<'a, RequestResult<Page<T>, E>>;
 
-fn paginate<'a, T, S, Fut, R, E>(
+fn paginate<'a, T, Fut, R, E>(
     mut request: R,
-    cursor: impl Into<Option<S>>,
+    cursor: Option<impl Into<String>>,
 ) -> Paginator<'a, T, E>
 where
     T: Unpin + Send + 'a,
     Fut: Future<Output = RequestResult<Page<T>, E>> + Send,
     R: 'a + FnMut(Option<String>) -> Fut + Send,
-    S: Into<String>,
     E: 'a + RobloxError,
 {
-    let mut cursor: Option<String> = cursor.into().map(Into::into);
+    let mut cursor: Option<String> = cursor.map(Into::into);
     Box::pin(try_stream! {
         loop {
             let response = request(cursor.clone()).await?;

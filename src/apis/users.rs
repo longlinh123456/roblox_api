@@ -65,7 +65,7 @@ macro_rules! add_base_url {
 #[async_trait]
 pub trait UsersAuthenticatedApi: AuthenticatedClient {
     async fn get_authenticated(&self) -> RequestResult<AuthenticatedUser, JsonError> {
-        self.authenticated_get::<_, (), _>(add_base_url!("v1/users/authenticated"), None)
+        self.authenticated_get::<_, _>(add_base_url!("v1/users/authenticated"), None::<()>)
             .await
     }
 }
@@ -87,12 +87,12 @@ pub trait UsersApi: BaseClient {
         T::IntoIter: Send + Clone,
     {
         let res = self
-            .post::<BatchUserInfoFromIdResponse, _, _>(
+            .post::<BatchUserInfoFromIdResponse, _>(
                 add_base_url!("v1/users"),
-                BatchUserInfoFromIdRequest {
+                Some(BatchUserInfoFromIdRequest {
                     user_ids: users.into_iter(),
                     exclude_banned_users,
-                },
+                }),
             )
             .await?;
         Ok(res.data)
@@ -108,12 +108,12 @@ pub trait UsersApi: BaseClient {
         T::IntoIter: Send + Clone,
     {
         let res = self
-            .post::<BatchUserInfoFromUsernameResponse, _, _>(
+            .post::<BatchUserInfoFromUsernameResponse, _>(
                 add_base_url!("v1/usernames/users"),
-                BatchUserInfoFromUsernameRequest {
+                Some(BatchUserInfoFromUsernameRequest {
                     usernames: users.into_iter(),
                     exclude_banned_users,
-                },
+                }),
             )
             .await?;
         Ok(res.data)

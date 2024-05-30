@@ -5,7 +5,7 @@ use crate::{AuthenticatedClient, RequestResult};
 
 use super::{Id, JsonError};
 
-#[derive(Deserialize, Debug, Clone, Copy)]
+#[derive(Deserialize, Debug, Default, Clone, Copy)]
 #[serde(rename_all = "camelCase")]
 struct Robux {
     robux: u64,

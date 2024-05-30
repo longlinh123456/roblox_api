@@ -16,7 +16,7 @@ macro_rules! add_base_url {
     };
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Default, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct BatchRequest<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -35,7 +35,7 @@ pub struct BatchRequest<'a> {
     pub circular: bool,
 }
 
-#[derive(Debug, Serialize, Default, PartialEq, Eq, Clone, Copy, is_enum_variant)]
+#[derive(Debug, Serialize, Default, Clone, Copy, PartialEq, Eq, is_enum_variant)]
 pub enum ThumbnailFormat {
     #[default]
     Webp,
@@ -43,8 +43,9 @@ pub enum ThumbnailFormat {
     Jpeg,
 }
 
-#[derive(Debug, Serialize, is_enum_variant, Clone, Copy)]
+#[derive(Debug, Serialize, Default, is_enum_variant, Clone, Copy)]
 pub enum ThumbnailSize {
+    #[default]
     #[serde(rename = "30x30")]
     _30x30,
     #[serde(rename = "42x42")]
@@ -111,9 +112,10 @@ pub enum ThumbnailSize {
     _128x128,
 }
 
-#[derive(Debug, Serialize_repr, Clone, Copy)]
+#[derive(Debug, Default, Serialize_repr, Clone, Copy)]
 #[repr(u8)]
 pub enum ThumbnailType {
+    #[default]
     Avatar = 1,
     AvatarHeadShot = 2,
     GameIcon = 3,
@@ -133,8 +135,9 @@ pub enum ThumbnailType {
     Look = 17,
 }
 
-#[derive(Debug, Deserialize, Clone, Copy, is_enum_variant)]
+#[derive(Debug, Default, Deserialize, Clone, Copy, is_enum_variant)]
 pub enum ThumbnailState {
+    #[default]
     Completed,
     Blocked,
     Error,
@@ -143,12 +146,13 @@ pub enum ThumbnailState {
     TemporarilyUnavailable,
 }
 
-#[derive(Debug, Deserialize, Clone, Copy)]
+#[derive(Debug, Default, Deserialize, Clone, Copy)]
 pub enum ThumbnailVersion {
+    #[default]
     TN3,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Default, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct BatchThumbnail {
     pub request_id: Option<String>,
@@ -161,13 +165,13 @@ pub struct BatchThumbnail {
     pub version: Option<ThumbnailVersion>,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Default, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 struct BatchResponse {
     data: Vec<BatchThumbnail>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Default)]
 struct BatchRequestArray<'a, T: Iterator<Item = BatchRequest<'a>> + Clone>(
     #[serde(with = "serde_iter::seq")] T,
 );

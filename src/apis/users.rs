@@ -12,14 +12,14 @@ pub struct AuthenticatedUser {
     pub name: String,
     pub display_name: String,
 }
-#[derive(Serialize)]
+#[derive(Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct BatchUserInfoFromIdRequest<T: Iterator<Item = Id> + Clone> {
     #[serde(with = "serde_iter::seq")]
     user_ids: T,
     exclude_banned_users: bool,
 }
-#[derive(Serialize)]
+#[derive(Default, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct BatchUserInfoFromUsernameRequest<'a, T: Iterator<Item = &'a str> + Clone> {
     #[serde(with = "serde_iter::seq")]

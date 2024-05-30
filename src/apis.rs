@@ -29,7 +29,7 @@ pub enum SortOrder {
 pub type Id = RangedU64<1, { i64::MAX as u64 }>;
 pub type OptionId = OptionRangedU64<1, { i64::MAX as u64 }>;
 
-#[derive(Deserialize, Clone, Copy)]
+#[derive(Deserialize, Default, Clone, Copy)]
 #[serde(transparent)]
 struct ZeroableId(OptionRangedU64<0, { i64::MAX as u64 }>);
 impl From<ZeroableId> for OptionId {
@@ -55,7 +55,7 @@ fn deserialize_date<'de, D: Deserializer<'de>>(deserializer: D) -> Result<NaiveD
 
 pub type RequestResult<T, E> = Result<T, Error<E>>;
 
-#[derive(Deserialize, Debug, Clone, Copy)]
+#[derive(Deserialize, Default, Debug, Clone, Copy)]
 #[serde(deny_unknown_fields)]
 pub struct Empty {}
 
@@ -63,7 +63,7 @@ pub trait RobloxError: RobloxErrorSealed + std::error::Error + Send {
     fn parse(res: String) -> Self;
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Default, Error)]
 #[error("string api error: {message}")]
 pub struct StringError {
     message: String,
@@ -75,7 +75,7 @@ impl RobloxError for StringError {
     }
 }
 
-#[derive(Debug, Error, is_enum_variant)]
+#[derive(Debug, Default, Error, is_enum_variant)]
 #[non_exhaustive]
 pub enum Error<T: RobloxError> {
     #[error(transparent)]
@@ -85,6 +85,7 @@ pub enum Error<T: RobloxError> {
     Request(#[from] reqwest::Error),
 
     #[error("rate limited")]
+    #[default]
     RateLimit,
 }
 
@@ -161,7 +162,7 @@ pub enum RequestLimit {
     OneHundred = 100,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Debug, Clone, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct Page<T> {
     pub previous_page_cursor: Option<String>,

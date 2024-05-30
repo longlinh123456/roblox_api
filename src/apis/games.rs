@@ -9,13 +9,14 @@ use uuid::Uuid;
 
 use super::{Id, JsonError, Page, Paginator, RequestResult, StringError};
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Default, Clone, Copy)]
 pub enum ServerType {
+    #[default]
     Public = 0,
     Friend = 1,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Default, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct PublicServer {
     pub id: Uuid,
@@ -45,7 +46,7 @@ macro_rules! add_base_url {
     };
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Default, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 struct BatchParameters<'a> {
     #[serde(skip_serializing_if = "crate::utils::is_default")]
@@ -102,7 +103,7 @@ pub struct PlaceDetails {
     pub voice_enabled: bool,
     pub camera_enabled: bool,
 }
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Default, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase")]
 pub struct AssetGenreViewModel {
     pub display_name: String,

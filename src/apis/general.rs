@@ -14,7 +14,7 @@ macro_rules! add_base_url {
     };
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Default, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 struct PlaceResponse {
     universe_id: OptionId,

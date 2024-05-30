@@ -21,9 +21,10 @@ pub struct BatchOwner {
     pub r#type: OwnerType,
 }
 
-#[derive(Deserialize, Debug, Clone, Copy)]
+#[derive(Deserialize, Default, Debug, Clone, Copy)]
 #[serde(tag = "type")]
 pub enum OwnerType {
+    #[default]
     User,
 }
 #[derive(Deserialize, Debug, Clone)]
@@ -44,7 +45,7 @@ pub struct BatchGroupInfo {
     pub created: DateTime<Utc>,
     pub has_verified_badge: bool,
 }
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Default, Debug, Clone)]
 struct BatchResponse {
     data: Vec<BatchGroupInfo>,
 }
@@ -63,7 +64,7 @@ pub struct SingleGroupInfo {
     pub has_verified_badge: bool,
 }
 
-#[derive(Serialize, Debug, Clone)]
+#[derive(Serialize, Default, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SolvedCaptcha<'a> {
     pub session_id: &'a str,
@@ -74,7 +75,7 @@ pub struct SolvedCaptcha<'a> {
     pub challenge_id: &'a str,
 }
 
-#[derive(Deserialize, Debug, Clone, Copy)]
+#[derive(Deserialize, Default, Debug, Clone, Copy)]
 #[serde(rename_all = "camelCase")]
 #[allow(clippy::struct_excessive_bools)]
 pub struct GroupMetadata {

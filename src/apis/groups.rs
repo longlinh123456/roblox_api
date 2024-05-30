@@ -66,13 +66,13 @@ pub struct SingleGroupInfo {
 
 #[derive(Serialize, Default, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct SolvedCaptcha<'a> {
-    pub session_id: &'a str,
-    pub redemption_token: &'a str,
-    pub captcha_id: &'a str,
-    pub captcha_token: &'a str,
-    pub captcha_provider: &'a str,
-    pub challenge_id: &'a str,
+pub struct SolvedCaptcha<T1: Send, T2: Send, T3: Send, T4: Send, T5: Send, T6: Send> {
+    pub session_id: T1,
+    pub redemption_token: T2,
+    pub captcha_id: T3,
+    pub captcha_token: T4,
+    pub captcha_provider: T5,
+    pub challenge_id: T6,
 }
 
 #[derive(Deserialize, Default, Debug, Clone, Copy)]
@@ -140,7 +140,16 @@ pub trait GroupsAuthenticatedApi: AuthenticatedClient {
     async fn join_group<'a>(
         &self,
         group: Id,
-        solved_captcha: Option<SolvedCaptcha<'a>>,
+        solved_captcha: Option<
+            SolvedCaptcha<
+                impl Serialize + Send,
+                impl Serialize + Send,
+                impl Serialize + Send,
+                impl Serialize + Send,
+                impl Serialize + Send,
+                impl Serialize + Send,
+            >,
+        >,
     ) -> RequestResult<Empty, JsonError> {
         self.authenticated_post(add_base_url!("v1/groups/{}/users", group), solved_captcha)
             .await

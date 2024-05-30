@@ -21,9 +21,9 @@ struct BatchUserInfoFromIdRequest<T: Iterator<Item = Id> + Clone> {
 }
 #[derive(Default, Serialize)]
 #[serde(rename_all = "camelCase")]
-struct BatchUserInfoFromUsernameRequest<'a, T: Iterator<Item = &'a str> + Clone> {
+struct BatchUserInfoFromUsernameRequest<T: Serialize + Send, I: Iterator<Item = T> + Clone> {
     #[serde(with = "serde_iter::seq")]
-    usernames: T,
+    usernames: I,
     exclude_banned_users: bool,
 }
 #[derive(Deserialize, Debug, Clone)]
@@ -65,7 +65,7 @@ macro_rules! add_base_url {
 #[async_trait]
 pub trait UsersAuthenticatedApi: AuthenticatedClient {
     async fn get_authenticated(&self) -> RequestResult<AuthenticatedUser, JsonError> {
-        self.authenticated_get::<_, _>(add_base_url!("v1/users/authenticated"), None::<()>)
+        self.authenticated_get(add_base_url!("v1/users/authenticated"), None::<()>)
             .await
     }
 }
@@ -98,14 +98,15 @@ pub trait UsersApi: BaseClient {
         Ok(res.data)
     }
     /// Limit of 200 users/request
-    async fn get_user_info_from_username_batch<'a, T>(
+    async fn get_user_info_from_username_batch<'a, I, T>(
         &self,
-        users: T,
+        users: I,
         exclude_banned_users: bool,
     ) -> RequestResult<Vec<BatchUserInfoFromUsername>, JsonError>
     where
-        T: IntoIterator<Item = &'a str> + Send,
-        T::IntoIter: Send + Clone,
+        T: Serialize + Send,
+        I: IntoIterator<Item = T> + Send,
+        I::IntoIter: Send + Clone,
     {
         let res = self
             .post::<BatchUserInfoFromUsernameResponse, _>(

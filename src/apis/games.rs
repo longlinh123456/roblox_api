@@ -48,7 +48,7 @@ macro_rules! add_base_url {
 
 #[derive(Debug, Default, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
-struct BatchParameters<'a> {
+struct BatchParameters<T: Send> {
     #[serde(skip_serializing_if = "crate::utils::is_default")]
     sort_order: SortOrder,
     #[serde(
@@ -59,7 +59,7 @@ struct BatchParameters<'a> {
     #[serde(skip_serializing_if = "crate::utils::is_default")]
     limit: RequestLimit,
     #[serde(skip_serializing_if = "Option::is_none")]
-    cursor: Option<&'a str>,
+    cursor: Option<T>,
 }
 
 #[allow(clippy::struct_excessive_bools)]
@@ -152,16 +152,15 @@ pub trait GamesApi: BaseClient {
         sort_order: SortOrder,
         exclude_full_servers: bool,
         limit: RequestLimit,
-        cursor: Option<impl AsRef<str> + Send>,
+        cursor: Option<impl Serialize + Send>,
     ) -> RequestResult<Page<PublicServer>, JsonError> {
-        let a = cursor.as_ref().map(AsRef::as_ref);
         self.get(
             add_base_url!("v1/games/{}/servers/{}", place_id, server_type as u8),
             Some(BatchParameters {
                 sort_order,
                 exclude_full_servers,
                 limit,
-                cursor: a,
+                cursor,
             }),
         )
         .await

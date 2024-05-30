@@ -18,15 +18,15 @@ macro_rules! add_base_url {
 
 #[derive(Debug, Default, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct BatchRequest<'a> {
+pub struct BatchRequest<T1: Send, T2: Send, T3: Send> {
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub request_id: Option<&'a str>,
+    pub request_id: Option<T1>,
     #[serde(skip_serializing_if = "crate::utils::option_id_is_none")]
     pub target_id: OptionId,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub token: Option<&'a str>,
+    pub token: Option<T2>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub alias: Option<&'a str>,
+    pub alias: Option<T3>,
     pub r#type: ThumbnailType,
     pub size: ThumbnailSize,
     #[serde(skip_serializing_if = "crate::utils::is_default")]
@@ -172,22 +172,28 @@ struct BatchResponse {
 }
 
 #[derive(Serialize, Default)]
-struct BatchRequestArray<'a, T: Iterator<Item = BatchRequest<'a>> + Clone>(
-    #[serde(with = "serde_iter::seq")] T,
-);
+struct BatchRequestArray<
+    T1: Send + Serialize,
+    T2: Send + Serialize,
+    T3: Send + Serialize,
+    I: Iterator<Item = BatchRequest<T1, T2, T3>> + Clone,
+>(#[serde(with = "serde_iter::seq")] I);
 
 #[async_trait]
 pub trait ThumbnailsApi: BaseClient {
     /// Limit of 100 thumbnails/request
     ///
     /// Rate limit: 50 requests/1.5s
-    async fn get_batch_thumbnails<'a, T>(
+    async fn get_batch_thumbnails<'a, I, T1, T2, T3>(
         &self,
-        requests: T,
+        requests: I,
     ) -> RequestResult<Vec<BatchThumbnail>, JsonError>
     where
-        T: IntoIterator<Item = BatchRequest<'a>> + Send,
-        T::IntoIter: Send + Clone,
+        T1: Serialize + Send,
+        T2: Serialize + Send,
+        T3: Serialize + Send,
+        I: IntoIterator<Item = BatchRequest<T1, T2, T3>> + Send,
+        I::IntoIter: Send + Clone,
     {
         let response = self
             .post::<BatchResponse, _>(

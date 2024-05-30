@@ -4,7 +4,7 @@ use async_stream::try_stream;
 use chrono::NaiveDate;
 use deranged::{OptionRangedU64, RangedU64};
 use derive_is_enum_variant::is_enum_variant;
-use futures::{future::BoxFuture, stream::BoxStream, Future};
+use futures::{stream::BoxStream, Future};
 use serde::{Deserialize, Deserializer};
 use serde_repr::Serialize_repr;
 use thiserror::Error;
@@ -170,8 +170,6 @@ pub struct Page<T> {
 }
 
 pub type Paginator<'a, T, E> = BoxStream<'a, RequestResult<Page<T>, E>>;
-
-pub type RequestFuture<'a, T, E> = BoxFuture<'a, RequestResult<Page<T>, E>>;
 
 pub fn paginate<'a, T, Fut, R, E>(
     mut request: R,

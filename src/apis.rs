@@ -173,7 +173,7 @@ pub type Paginator<'a, T, E> = BoxStream<'a, RequestResult<Page<T>, E>>;
 
 pub type RequestFuture<'a, T, E> = BoxFuture<'a, RequestResult<Page<T>, E>>;
 
-fn paginate<'a, T, Fut, R, E>(
+pub fn paginate<'a, T, Fut, R, E>(
     mut request: R,
     cursor: Option<impl Into<String>>,
 ) -> Paginator<'a, T, E>

@@ -2,6 +2,7 @@ use async_trait::async_trait;
 use derive_is_enum_variant::is_enum_variant;
 use serde::{Deserialize, Serialize};
 use serde_repr::Serialize_repr;
+use thiserror::Error;
 
 use crate::BaseClient;
 
@@ -136,7 +137,7 @@ pub enum ThumbnailType {
 }
 
 #[derive(Debug, Default, Deserialize, Clone, Copy, is_enum_variant)]
-pub enum ThumbnailState {
+enum ThumbnailState {
     #[default]
     Completed,
     Blocked,
@@ -144,6 +145,31 @@ pub enum ThumbnailState {
     InReview,
     Pending,
     TemporarilyUnavailable,
+}
+#[derive(Debug, Default, Clone, Copy, is_enum_variant)]
+pub enum ThumbnailErrorState {
+    #[default]
+    Error,
+    Blocked,
+    InReview,
+    Pending,
+    TemporarilyUnavailable,
+}
+
+#[allow(clippy::fallible_impl_from)]
+impl From<ThumbnailState> for ThumbnailErrorState {
+    fn from(value: ThumbnailState) -> Self {
+        match value {
+            ThumbnailState::Completed => {
+                panic!("successful thumbnail request should not be converted into an error")
+            }
+            ThumbnailState::Blocked => Self::Blocked,
+            ThumbnailState::Error => Self::Error,
+            ThumbnailState::InReview => Self::InReview,
+            ThumbnailState::Pending => Self::Pending,
+            ThumbnailState::TemporarilyUnavailable => Self::TemporarilyUnavailable,
+        }
+    }
 }
 
 #[derive(Debug, Default, Deserialize, Clone, Copy)]
@@ -154,21 +180,62 @@ pub enum ThumbnailVersion {
 
 #[derive(Debug, Default, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
+struct InnerBatchThumbnail {
+    request_id: Option<String>,
+    error_code: i8,
+    error_message: String,
+    #[serde(deserialize_with = "super::deserialize_zeroable_id")]
+    target_id: OptionId,
+    state: ThumbnailState,
+    image_url: Option<String>,
+    version: Option<ThumbnailVersion>,
+}
+
+pub type BatchThumbnailResult = Result<BatchThumbnail, BatchThumbnailError>;
+
+#[derive(Debug, Default, Clone)]
 pub struct BatchThumbnail {
     pub request_id: Option<String>,
+    pub target_id: OptionId,
+    pub version: ThumbnailVersion,
+    pub image_url: String,
+}
+
+#[derive(Debug, Default, Clone, Error)]
+#[error("error in requesting batch thumbnail: {self:?}")]
+pub struct BatchThumbnailError {
+    pub request_id: Option<String>,
+    pub target_id: OptionId,
     pub error_code: i8,
     pub error_message: String,
-    #[serde(deserialize_with = "super::deserialize_zeroable_id")]
-    pub target_id: OptionId,
-    pub state: ThumbnailState,
-    pub image_url: Option<String>,
-    pub version: Option<ThumbnailVersion>,
+    pub state: ThumbnailErrorState,
+}
+
+#[allow(clippy::fallible_impl_from)]
+impl From<InnerBatchThumbnail> for BatchThumbnailResult {
+    fn from(value: InnerBatchThumbnail) -> Self {
+        match value.state {
+            ThumbnailState::Completed => Ok(BatchThumbnail {
+                request_id: value.request_id,
+                target_id: value.target_id,
+                version: value.version.unwrap(),
+                image_url: value.image_url.unwrap(),
+            }),
+            _ => Err(BatchThumbnailError {
+                request_id: value.request_id,
+                target_id: value.target_id,
+                error_code: value.error_code,
+                error_message: value.error_message,
+                state: value.state.into(),
+            }),
+        }
+    }
 }
 
 #[derive(Debug, Default, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 struct BatchResponse {
-    data: Vec<BatchThumbnail>,
+    data: Vec<InnerBatchThumbnail>,
 }
 
 #[derive(Serialize, Default)]
@@ -187,7 +254,7 @@ pub trait ThumbnailsApi: BaseClient {
     async fn get_batch_thumbnails<'a, I, T1, T2, T3>(
         &self,
         requests: I,
-    ) -> RequestResult<Vec<BatchThumbnail>, JsonError>
+    ) -> RequestResult<Vec<BatchThumbnailResult>, JsonError>
     where
         T1: Serialize + Send,
         T2: Serialize + Send,
@@ -195,13 +262,13 @@ pub trait ThumbnailsApi: BaseClient {
         I: IntoIterator<Item = BatchRequest<T1, T2, T3>> + Send,
         I::IntoIter: Send + Clone,
     {
-        let response = self
+        let res = self
             .post::<BatchResponse, _>(
                 add_base_url!("v1/batch"),
                 Some(BatchRequestArray(requests.into_iter())),
             )
             .await?;
-        Ok(response.data)
+        Ok(res.data.into_iter().map(Into::into).collect())
     }
 }
 

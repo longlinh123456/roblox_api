@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use serde_repr::Serialize_repr;
 use thiserror::Error;
 
-use crate::BaseClient;
+use crate::{private::BatchThumbnailResultExtSealed, BaseClient};
 
 use super::{JsonError, OptionId, RequestResult};
 
@@ -209,6 +209,28 @@ pub struct BatchThumbnailError {
     pub error_code: i8,
     pub error_message: String,
     pub state: ThumbnailErrorState,
+}
+
+pub trait BatchThumbnailResultExt: BatchThumbnailResultExtSealed {
+    fn request_id(&self) -> Option<&str>;
+    fn target_id(&self) -> OptionId;
+}
+
+impl BatchThumbnailResultExtSealed for BatchThumbnailResult {}
+
+impl BatchThumbnailResultExt for BatchThumbnailResult {
+    fn request_id(&self) -> Option<&str> {
+        match self {
+            Ok(thumbnail) => thumbnail.request_id.as_deref(),
+            Err(thumbnail) => thumbnail.request_id.as_deref(),
+        }
+    }
+    fn target_id(&self) -> OptionId {
+        match self {
+            Ok(thumbnail) => thumbnail.target_id,
+            Err(thumbnail) => thumbnail.target_id,
+        }
+    }
 }
 
 #[allow(clippy::fallible_impl_from)]

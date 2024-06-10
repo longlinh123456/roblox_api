@@ -118,7 +118,7 @@ pub enum JsonError {
 impl RobloxErrorSealed for JsonError {}
 impl RobloxError for JsonError {
     fn parse(res: String) -> Self {
-        serde_json::from_str::<Self>(&res).map_or(Self::Malformed(res), |value| value)
+        sonic_rs::from_str::<Self>(&res).map_or(Self::Malformed(res), |value| value)
     }
 }
 impl JsonError {

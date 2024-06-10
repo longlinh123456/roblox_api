@@ -107,8 +107,7 @@ impl Client {
             return Err(Error::RateLimit);
         };
         let res = response.text().await?;
-        serde_json::from_str::<T>(&res)
-            .map_or_else(|_| Err(E::parse(res).into()), |value| Ok(value))
+        sonic_rs::from_str::<T>(&res).map_or_else(|_| Err(E::parse(res).into()), |value| Ok(value))
     }
     #[must_use]
     pub fn new(builder: ReqwestClientBuilder) -> Self {
@@ -184,8 +183,7 @@ impl CookieClient {
             return Err(Error::RateLimit);
         };
         let res = response.text().await?;
-        serde_json::from_str::<T>(&res)
-            .map_or_else(|_| Err(E::parse(res).into()), |value| Ok(value))
+        sonic_rs::from_str::<T>(&res).map_or_else(|_| Err(E::parse(res).into()), |value| Ok(value))
     }
     #[must_use]
     pub fn new(builder: ReqwestClientBuilder, auth_cookie: &str) -> Self {

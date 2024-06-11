@@ -187,6 +187,7 @@ where
         loop {
             let response = request(cursor.clone()).await?;
             if response.next_page_cursor.is_none() {
+                yield response;
                 break;
             };
             cursor.clone_from(&response.next_page_cursor);

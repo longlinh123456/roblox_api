@@ -14,7 +14,7 @@ reqwest = { version = "0", features = [
 	"cookies",
 ] }
 deranged = { version = "0", features = ["serde"] }
-thiserror = "1"
+thiserror = "2"
 itertools = "0"
 tracing = "0"
 async-trait = "0"
@@ -29,5 +29,5 @@ async-stream = "0"
 uuid = { version = "1", features = ["v4", "serde"] }
 serde_iter = "0"
 arc-swap = "1"
-dashmap = "5"
+dashmap = "6"
 sonic-rs = "0"

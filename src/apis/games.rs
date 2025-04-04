@@ -1,6 +1,6 @@
 use crate::{
-    apis::{RequestLimit, SortOrder},
     BaseClient,
+    apis::{RequestLimit, SortOrder},
 };
 use async_trait::async_trait;
 use chrono::NaiveDate;

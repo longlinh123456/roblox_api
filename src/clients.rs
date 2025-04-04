@@ -5,10 +5,10 @@ use bytes::Bytes;
 use dashmap::DashMap;
 use itertools::Itertools;
 use reqwest::{
-    cookie::CookieStore, header::HeaderValue, Client as ReqwestClient,
-    ClientBuilder as ReqwestClientBuilder, IntoUrl, Method, RequestBuilder, Url,
+    Client as ReqwestClient, ClientBuilder as ReqwestClientBuilder, IntoUrl, Method,
+    RequestBuilder, Url, cookie::CookieStore, header::HeaderValue,
 };
-use serde::{de::DeserializeOwned, Serialize};
+use serde::{Serialize, de::DeserializeOwned};
 use std::sync::Arc;
 
 use crate::apis::{Error, RequestResult, RobloxError};
@@ -74,7 +74,7 @@ impl Client {
         let mut builder = self.client.request(method, url);
         if let Some(query) = query {
             builder = builder.query(&query);
-        };
+        }
         builder = match payload {
             Some(payload) => builder.json(&payload),
             None => builder
@@ -105,7 +105,7 @@ impl Client {
         }
         if response.status() == 429 {
             return Err(Error::RateLimit);
-        };
+        }
         let res = response.text().await?;
         sonic_rs::from_str::<T>(&res).map_or_else(|_| Err(E::parse(res).into()), |value| Ok(value))
     }
@@ -150,7 +150,7 @@ impl CookieClient {
         let mut builder = self.client.request(method, url);
         if let Some(query) = query {
             builder = builder.query(&query);
-        };
+        }
         builder = match payload {
             Some(payload) => builder.json(&payload),
             None => builder
@@ -181,7 +181,7 @@ impl CookieClient {
         }
         if response.status() == 429 {
             return Err(Error::RateLimit);
-        };
+        }
         let res = response.text().await?;
         sonic_rs::from_str::<T>(&res).map_or_else(|_| Err(E::parse(res).into()), |value| Ok(value))
     }

@@ -4,7 +4,7 @@ use async_stream::try_stream;
 use chrono::NaiveDate;
 use deranged::{OptionRangedU64, RangedU64};
 use derive_is_enum_variant::is_enum_variant;
-use futures::{stream::BoxStream, Future};
+use futures::{Future, stream::BoxStream};
 use serde::{Deserialize, Deserializer};
 use serde_repr::Serialize_repr;
 use thiserror::Error;
@@ -189,7 +189,7 @@ where
             if response.next_page_cursor.is_none() {
                 yield response;
                 break;
-            };
+            }
             cursor.clone_from(&response.next_page_cursor);
             yield response;
         }

@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use serde_repr::Serialize_repr;
 use thiserror::Error;
 
-use crate::{private::BatchThumbnailResultExtSealed, BaseClient};
+use crate::{BaseClient, private::BatchThumbnailResultExtSealed};
 
 use super::{JsonError, OptionId, RequestResult};
 

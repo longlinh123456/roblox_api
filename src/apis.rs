@@ -4,7 +4,7 @@ use async_stream::try_stream;
 use chrono::NaiveDate;
 use deranged::{OptionRangedU64, RangedU64};
 use derive_is_enum_variant::is_enum_variant;
-use futures::{Future, stream::BoxStream};
+use futures::Stream;
 use serde::{Deserialize, Deserializer};
 use serde_repr::Serialize_repr;
 use thiserror::Error;
@@ -170,22 +170,19 @@ pub struct Page<T> {
     pub data: Vec<T>,
 }
 
-pub type Paginator<'a, T, E> = BoxStream<'a, RequestResult<Page<T>, E>>;
-
-pub fn paginate<'a, T, Fut, R, E>(
+pub fn paginate<T, R, E>(
     mut request: R,
     cursor: Option<impl Into<String>>,
-) -> Paginator<'a, T, E>
+) -> impl Stream<Item = RequestResult<Page<T>, E>>
 where
-    T: Unpin + Send + 'a,
-    Fut: Future<Output = RequestResult<Page<T>, E>> + Send,
-    R: 'a + FnMut(Option<String>) -> Fut + Send,
-    E: 'a + RobloxError,
+    T: Unpin + Send,
+    R: AsyncFnMut(Option<&'_ str>) -> RequestResult<Page<T>, E>,
+    E: RobloxError,
 {
-    let mut cursor: Option<String> = cursor.map(Into::into);
     Box::pin(try_stream! {
+        let mut cursor: Option<String> = cursor.map(Into::into);
         loop {
-            let response = request(cursor.clone()).await?;
+            let response = request(cursor.as_deref()).await?;
             if response.next_page_cursor.is_none() {
                 yield response;
                 break;

@@ -4,10 +4,11 @@ use crate::{
 };
 use async_trait::async_trait;
 use chrono::NaiveDate;
+use futures::Stream;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use super::{Id, JsonError, Page, Paginator, RequestResult, StringError};
+use super::{Id, JsonError, Page, RequestResult, StringError};
 
 #[derive(Debug, Default, Clone, Copy)]
 pub enum ServerType {
@@ -129,9 +130,9 @@ pub trait GamesApi: BaseClient {
         exclude_full_servers: bool,
         limit: RequestLimit,
         cursor: Option<impl Into<String>>,
-    ) -> Paginator<'_, PublicServer, JsonError> {
+    ) -> impl Stream<Item = RequestResult<Page<PublicServer>, JsonError>> {
         super::paginate(
-            move |cursor| {
+            async move |cursor: Option<&str>| {
                 self.get_public_servers_manual(
                     place_id,
                     server_type,
@@ -140,6 +141,7 @@ pub trait GamesApi: BaseClient {
                     limit,
                     cursor,
                 )
+                .await
             },
             cursor,
         )

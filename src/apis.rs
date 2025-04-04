@@ -175,7 +175,7 @@ pub fn paginate<T, R, E>(
     cursor: Option<impl Into<String>>,
 ) -> impl Stream<Item = RequestResult<Page<T>, E>>
 where
-    T: Unpin + Send,
+    T: Unpin,
     R: AsyncFnMut(Option<&'_ str>) -> RequestResult<Page<T>, E>,
     E: RobloxError,
 {

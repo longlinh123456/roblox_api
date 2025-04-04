@@ -132,7 +132,7 @@ pub trait GamesApi: BaseClient {
         cursor: Option<impl Into<String>>,
     ) -> impl Stream<Item = RequestResult<Page<PublicServer>, JsonError>> {
         super::paginate(
-            async move |cursor: Option<&str>| {
+            async move |cursor| {
                 self.get_public_servers_manual(
                     place_id,
                     server_type,

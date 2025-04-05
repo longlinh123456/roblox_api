@@ -175,11 +175,10 @@ pub fn paginate<T, R, E>(
     cursor: Option<impl Into<String>>,
 ) -> impl Stream<Item = RequestResult<Page<T>, E>>
 where
-    T: Unpin,
     R: AsyncFnMut(Option<&'_ str>) -> RequestResult<Page<T>, E>,
     E: RobloxError,
 {
-    Box::pin(try_stream! {
+    try_stream! {
         let mut cursor: Option<String> = cursor.map(Into::into);
         loop {
             let response = request(cursor.as_deref()).await?;
@@ -190,5 +189,5 @@ where
             cursor.clone_from(&response.next_page_cursor);
             yield response;
         }
-    })
+    }
 }

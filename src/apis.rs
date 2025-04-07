@@ -6,7 +6,7 @@ use deranged::{OptionRangedU64, RangedU64};
 use derive_is_enum_variant::is_enum_variant;
 use futures::Stream;
 use serde::{Deserialize, Deserializer};
-use serde_repr::Serialize_repr;
+use serde_repr::{Deserialize_repr, Serialize_repr};
 use thiserror::Error;
 
 use crate::private::RobloxErrorSealed;
@@ -18,12 +18,42 @@ pub mod groups;
 pub mod thumbnails;
 pub mod users;
 
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum SortOrder {
+    Ascending,
+    Descending,
+}
+
 #[derive(Debug, Serialize_repr, Default, PartialEq, Eq, Clone, Copy)]
 #[repr(u8)]
-pub enum SortOrder {
+enum SortOrderDefaultAscending {
+    #[default]
+    Ascending = 1,
+    Descending = 2,
+}
+impl From<SortOrder> for SortOrderDefaultAscending {
+    fn from(value: SortOrder) -> Self {
+        match value {
+            SortOrder::Ascending => Self::Ascending,
+            SortOrder::Descending => Self::Descending,
+        }
+    }
+}
+
+#[derive(Debug, Serialize_repr, Default, PartialEq, Eq, Clone, Copy)]
+#[repr(u8)]
+enum SortOrderDefaultDescending {
     Ascending = 1,
     #[default]
     Descending = 2,
+}
+impl From<SortOrder> for SortOrderDefaultDescending {
+    fn from(value: SortOrder) -> Self {
+        match value {
+            SortOrder::Ascending => Self::Ascending,
+            SortOrder::Descending => Self::Descending,
+        }
+    }
 }
 
 pub type Id = RangedU64<1, { i64::MAX as u64 }>;
@@ -160,6 +190,17 @@ pub enum RequestLimit {
     TwentyFive = 25,
     Fifty = 50,
     OneHundred = 100,
+}
+
+#[derive(Debug, Deserialize_repr, Default, PartialEq, Eq, Clone, Copy)]
+#[repr(u8)]
+pub enum MembershipType {
+    #[default]
+    None = 0,
+    BuildersClub = 1,
+    TurboBuildersClub = 2,
+    OutrageousBuildersClub = 3,
+    Premium = 4,
 }
 
 #[derive(Deserialize, Debug, Clone, Default)]

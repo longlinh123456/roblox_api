@@ -8,7 +8,7 @@ use futures::Stream;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use super::{Id, JsonError, Page, RequestResult, StringError};
+use super::{Id, JsonError, Page, RequestResult, SortOrderDefaultDescending, StringError};
 
 #[derive(Debug, Default, Clone, Copy)]
 pub enum ServerType {
@@ -51,7 +51,7 @@ macro_rules! add_base_url {
 #[serde(rename_all = "camelCase")]
 struct BatchParameters<T: Send> {
     #[serde(skip_serializing_if = "crate::utils::is_default")]
-    sort_order: SortOrder,
+    sort_order: SortOrderDefaultDescending,
     #[serde(
         rename = "excludeFullGames",
         skip_serializing_if = "crate::utils::is_default"
@@ -159,7 +159,7 @@ pub trait GamesApi: BaseClient {
         self.get(
             add_base_url!("v1/games/{}/servers/{}", place_id, server_type as u8),
             Some(BatchParameters {
-                sort_order,
+                sort_order: sort_order.into(),
                 exclude_full_servers,
                 limit,
                 cursor,

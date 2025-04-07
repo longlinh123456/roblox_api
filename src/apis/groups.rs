@@ -123,10 +123,9 @@ pub struct GroupMember {
     pub role: GroupRole,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Default, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 struct GetGroupMembersParameters<T: Send> {
-    group: Id,
     #[serde(skip_serializing_if = "crate::utils::is_default")]
     limit: RequestLimit,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -192,9 +191,8 @@ pub trait GroupsApi: BaseClient {
         sort_order: SortOrder,
     ) -> RequestResult<Page<GroupMember>, JsonError> {
         self.get(
-            add_base_url!("/v1/groups/{}/users"),
+            add_base_url!("/v1/groups/{}/users", group),
             Some(GetGroupMembersParameters {
-                group,
                 limit,
                 cursor,
                 sort_order: sort_order.into(),

@@ -22,10 +22,12 @@ pub mod groups;
 pub mod thumbnails;
 pub mod users;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+#[derive(Debug, Default, PartialEq, Eq, Clone, Copy)]
 pub enum SortOrder {
     Ascending,
     Descending,
+    #[default]
+    Default,
 }
 
 #[derive(Debug, Serialize_repr, Default, PartialEq, Eq, Clone, Copy)]
@@ -40,6 +42,7 @@ impl From<SortOrder> for SortOrderDefaultAscending {
         match value {
             SortOrder::Ascending => Self::Ascending,
             SortOrder::Descending => Self::Descending,
+            SortOrder::Default => Self::default(),
         }
     }
 }
@@ -56,6 +59,7 @@ impl From<SortOrder> for SortOrderDefaultDescending {
         match value {
             SortOrder::Ascending => Self::Ascending,
             SortOrder::Descending => Self::Descending,
+            SortOrder::Default => Self::default(),
         }
     }
 }

@@ -191,7 +191,7 @@ pub trait GroupsApi: BaseClient {
         sort_order: SortOrder,
     ) -> RequestResult<Page<GroupMember>, JsonError> {
         self.get(
-            add_base_url!("/v1/groups/{}/users", group),
+            add_base_url!("v1/groups/{}/users", group),
             Some(GetGroupMembersParameters {
                 limit,
                 cursor,

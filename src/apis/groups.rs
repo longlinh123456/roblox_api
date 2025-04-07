@@ -165,11 +165,11 @@ pub trait GroupsApi: BaseClient {
         self.get(add_base_url!("v1/groups/{}", group), None::<()>)
             .await
     }
-    async fn get_metadata(&self) -> RequestResult<GroupMetadata, JsonError> {
+    async fn get_group_metadata(&self) -> RequestResult<GroupMetadata, JsonError> {
         self.get(add_base_url!("v1/groups/metadata"), None::<()>)
             .await
     }
-    fn get_members(
+    fn get_group_members(
         &self,
         group: Id,
         limit: RequestLimit,
@@ -178,13 +178,13 @@ pub trait GroupsApi: BaseClient {
     ) -> impl Stream<Item = RequestResult<Page<GroupMember>, JsonError>> {
         super::paginate(
             async move |cursor| {
-                self.get_members_manual(group, limit, cursor, sort_order)
+                self.get_group_members_manual(group, limit, cursor, sort_order)
                     .await
             },
             cursor,
         )
     }
-    async fn get_members_manual(
+    async fn get_group_members_manual(
         &self,
         group: Id,
         limit: RequestLimit,

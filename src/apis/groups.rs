@@ -104,13 +104,15 @@ pub struct GroupMetadata {
     pub show_previous_group_names: bool,
 }
 
+pub type GroupRoleRank = RangedU32<0, { i32::MAX as u32 }>;
+
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct GroupRole {
     pub id: Id,
     pub name: String,
     pub description: String,
-    pub rank: RangedU32<0, { i32::MAX as u32 }>,
+    pub rank: GroupRoleRank,
     pub member_count: u64,
 }
 

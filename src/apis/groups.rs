@@ -34,8 +34,6 @@ pub enum GroupOwnerType {
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DetailedGroupUser {
-    #[serde(rename = "buildersClubMembershipType")]
-    pub membership_type: MembershipType,
     pub has_verified_badge: bool,
     pub user_id: Id,
     pub username: String,
@@ -108,19 +106,17 @@ pub type GroupRoleRank = RangedU32<0, { i32::MAX as u32 }>;
 
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
-pub struct GroupRole {
+pub struct GetMembersGroupRole {
     pub id: Id,
     pub name: String,
-    pub description: String,
     pub rank: GroupRoleRank,
-    pub member_count: u64,
 }
 
 #[derive(Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct GroupMember {
     pub user: DetailedGroupUser,
-    pub role: GroupRole,
+    pub role: GetMembersGroupRole,
 }
 
 #[derive(Debug, Default, Serialize, Clone)]
